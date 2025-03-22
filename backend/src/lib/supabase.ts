@@ -49,8 +49,14 @@ export const getFavorites = async (userId: string) => {
     .select('*')
     .eq('user_id', userId);
 
-  console.log(`Retrieved ${data?.length || 0} favorites for user ${userId.substring(0, 8)}...`);
-  return { data, error };
+  // Ensure categories is always an array
+  const processedData = (data || []).map(favorite => ({
+    ...favorite,
+    categories: Array.isArray(favorite.categories) ? favorite.categories : []
+  }));
+
+  console.log(`Retrieved ${processedData.length} favorites for user ${userId.substring(0, 8)}...`);
+  return { data: processedData, error };
 };
 
 export const addFavorite = async (userId: string, prompt: string, categories?: string[] | null) => {

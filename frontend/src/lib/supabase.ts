@@ -75,7 +75,13 @@ export const getFavoritePrompts = async (userId: string) => {
     .select('*')
     .eq('user_id', userId);
   
-  return { data, error };
+  // Ensure categories is always an array
+  const processedData = (data || []).map(favorite => ({
+    ...favorite,
+    categories: Array.isArray(favorite.categories) ? favorite.categories : []
+  }));
+  
+  return { data: processedData, error };
 };
 
 export const deleteFavoritePrompt = async (id: number) => {

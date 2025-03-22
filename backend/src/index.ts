@@ -339,8 +339,14 @@ app.get('/api/favorites', validateUserIdParam, async (req: Request, res: Respons
     );
     
     if (result && result.rows) {
-      console.log(`Retrieved ${result.rows.length} favorites for user ${userId}`);
-      res.json(result.rows);
+      // Ensure categories is always an array
+      const processedRows = result.rows.map(row => ({
+        ...row,
+        categories: Array.isArray(row.categories) ? row.categories : []
+      }));
+      
+      console.log(`Retrieved ${processedRows.length} favorites for user ${userId}`);
+      res.json(processedRows);
     } else {
       throw new Error('Failed to retrieve favorites');
     }

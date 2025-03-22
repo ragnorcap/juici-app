@@ -210,7 +210,7 @@ const DashboardPage: React.FC = () => {
               <FavoritePrompt>{favorite.prompt}</FavoritePrompt>
               
               <FavoriteCategories>
-                {favorite.categories && favorite.categories.map((category: string, index: number) => (
+                {(favorite.categories || []).map((category: string, index: number) => (
                   <CategoryTag key={index}>{category}</CategoryTag>
                 ))}
               </FavoriteCategories>

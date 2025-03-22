@@ -7,9 +7,17 @@ interface Idea {
   categories?: string[];
 }
 
+interface Favorite {
+  id: number;
+  user_id: string;
+  prompt: string;
+  categories?: string[] | null;
+  created_at?: string;
+}
+
 interface IdeaContextType {
   currentIdea: Idea | null;
-  favorites: Idea[];
+  favorites: Favorite[];
   prdContent: string;
   isLoading: boolean;
   isGeneratingPRD: boolean;
@@ -44,7 +52,7 @@ export const useIdea = () => useContext(IdeaContext);
 export const IdeaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [currentIdea, setCurrentIdea] = useState<Idea | null>(null);
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [prdContent, setPrdContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isGeneratingPRD, setIsGeneratingPRD] = useState<boolean>(false);
@@ -197,7 +205,13 @@ export const IdeaProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      setFavorites(data || []);
+      // Ensure categories is always an array
+      const processedFavorites: Favorite[] = (data || []).map((favorite: Favorite) => ({
+        ...favorite,
+        categories: Array.isArray(favorite.categories) ? favorite.categories : []
+      }));
+      
+      setFavorites(processedFavorites);
       
     } catch (err: any) {
       setError(err.message || 'Failed to load favorites');
