@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    },
+    {
+      "src": "backend/src/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/src/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/build/index.html"
+    }
+  ],
+  "env": {
+    "REACT_APP_API_URL": "@juici_api_url",
+    "OPENAI_API_KEY": "@openai_api_key",
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_KEY": "@supabase_key",
+    "SUPABASE_SECRET": "@supabase_secret",
+    "API_KEY": "@juici_api_key",
+    "NODE_ENV": "production"
+  },
+  "regions": ["sfo1"],
+  "github": {
+    "silent": true
+  }
+} 

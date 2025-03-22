@@ -1,0 +1,12 @@
+{
+  "favorites": [
+    {
+      "id": 2,
+      "user_id": "8f632473-be3b-44c1-838a-05ecc3323ea9",
+      "prompt": "Test prompt from curl",
+      "categories": "[\"test\",\"curl\"]",
+      "created_at": "2025-03-22T21:05:06.920Z"
+    }
+  ],
+  "nextId": 4
+}
