@@ -10,7 +10,7 @@ A vibrant, juice-themed idea generator that helps developers and creatives overc
 
 ## Features
 
-- 🎯 Generates random project ideas from a curated list of 50 prompts
+- 🎯 Generates random project ideas from a curated list of 150+ prompts ranging from basic to extremely difficult
 - 📝 Create professional-grade Product Requirements Documents (PRDs) with AI
 - 🎨 Fresh, modern UI with a juice theme (lime green, yellow, and purple accents)
 - 💧 Animated hero section with liquid/fluid animations
