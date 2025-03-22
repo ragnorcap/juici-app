@@ -4,7 +4,8 @@
 
 A vibrant, juice-themed idea generator that helps developers and creatives overcome analysis paralysis by providing project inspiration.
 
-<img width="1440" alt="Screenshot 2025-03-22 at 6 50 04 PM" src="https://github.com/user-attachments/assets/0bbacf99-ab74-44e1-9674-843650f4196d" />
+<img width="1213" alt="Screenshot 2025-03-22 at 5 53 46 PM" src="https://github.com/user-attachments/assets/bac6a49c-e03c-4a3d-9518-197f033d3b24" />
+
 
 
 ## Features
