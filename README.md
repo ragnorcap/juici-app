@@ -126,8 +126,4 @@ MIT License
 - UI design inspired by modern juice brands and creative platforms
 - Logo and branding designed in-house
 
-## Connect with Us
 
-- Website: [juici.space](https://juici.space)
-- Twitter: [@juici_app](https://twitter.com/juici_app)
-- Email: hello@juici.space 
