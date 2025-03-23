@@ -6,7 +6,7 @@
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build",
-        "buildCommand": "cd .. && npm install && cd frontend && npm ci && CI=false npm run build"
+        "buildCommand": "npm install && CI=false npm run build"
       }
     },
     {
@@ -20,21 +20,19 @@
       "dest": "backend/src/index.ts"
     },
     {
+      "src": "^/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
-      "dest": "frontend/build/index.html"
+      "dest": "/index.html"
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "${REACT_APP_API_URL}",
-    "OPENAI_API_KEY": "${OPENAI_API_KEY}",
-    "SUPABASE_URL": "${SUPABASE_URL}",
-    "SUPABASE_KEY": "${SUPABASE_KEY}",
-    "SUPABASE_SECRET": "${SUPABASE_SECRET}",
-    "API_KEY": "${API_KEY}",
+    "REACT_APP_API_URL": "/api",
     "NODE_ENV": "production"
-  },
-  "regions": ["sfo1"],
-  "github": {
-    "silent": true
   }
 } 
