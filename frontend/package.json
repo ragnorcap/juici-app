@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "/",
+  "engines": {
+    "node": "18.x"
+  },
   "dependencies": {
     "@craco/craco": "^7.1.0",
     "@supabase/supabase-js": "^2.49.1",
