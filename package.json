@@ -14,6 +14,7 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm start",
     "generate-prompts": "ts-node-esm generate-prompts.ts",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
