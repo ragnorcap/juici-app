@@ -4,7 +4,7 @@
  */
 
 // Base URL for API requests - use environment variable when available
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5555';
+export const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Maximum request timeout (ms)
 export const REQUEST_TIMEOUT = 30000;

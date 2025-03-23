@@ -9,12 +9,13 @@
   },
   "scripts": {
     "start": "ts-node --transpile-only backend/src/index.ts",
-    "build": "cd frontend && npm install && CI=false npm run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:frontend": "cd frontend && npm install && CI=false npm run build",
+    "build:backend": "cd backend && npm install && npm run build",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm start",
     "generate-prompts": "ts-node-esm generate-prompts.ts",
-    "vercel-build": "cd frontend && npm install && CI=false npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
