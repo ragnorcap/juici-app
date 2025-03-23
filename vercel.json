@@ -1,32 +1,10 @@
 {
-  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/backend/src/index.ts" },
+    { "source": "/(.*)", "destination": "/frontend/build/index.html" }
+  ],
   "buildCommand": "npm run build",
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    },
-    {
-      "src": "backend/src/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/src/index.ts"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/build/index.html"
-    }
-  ],
+  "outputDirectory": "frontend/build",
   "env": {
     "REACT_APP_API_URL": "/api",
     "NODE_ENV": "production"
