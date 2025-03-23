@@ -3,19 +3,16 @@
   "version": "1.0.0",
   "description": "creative juices in seconds",
   "main": "backend/src/index.ts",
-  "type": "module",
   "engines": {
     "node": "18.x"
   },
   "scripts": {
-    "start": "ts-node --transpile-only backend/src/index.ts",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:frontend": "cd frontend && npm install && CI=false npm run build",
-    "build:backend": "cd backend && npm install && npm run build",
+    "start": "cd backend && node dist/index.js",
+    "build": "cd frontend && npm install && npm run build",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm start",
-    "generate-prompts": "ts-node-esm generate-prompts.ts",
+    "generate-prompts": "node generate-prompts.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -32,7 +29,6 @@
   "devDependencies": {
     "@types/node": "^20.9.0",
     "concurrently": "^8.2.1",
-    "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }
 } 
