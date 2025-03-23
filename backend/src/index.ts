@@ -420,16 +420,21 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`🧃 Juici API server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  
-  if (!isDbConnected) {
-    console.warn('⚠️ Running with in-memory database - favorites will not persist across server restarts');
-  }
-  
-  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key_here') {
-    console.warn('⚠️ OpenAI API key not configured - PRD generation will use sample responses');
-  }
-}); 
+// Start the server only if running directly (not when imported as a module)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🧃 Juici API server running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+    
+    if (!isDbConnected) {
+      console.warn('⚠️ Running with in-memory database - favorites will not persist across server restarts');
+    }
+    
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key_here') {
+      console.warn('⚠️ OpenAI API key not configured - PRD generation will use sample responses');
+    }
+  });
+}
+
+// Export the app for serverless functions
+export default app; 
