@@ -18,6 +18,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5555;
 
+// Trust proxy when deployed (needed for Vercel)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Generate API key if not already set
 const API_KEY = process.env.API_KEY || 'juici_dev_' + uuidv4().replace(/-/g, '');
 if (!process.env.API_KEY) {
@@ -91,8 +96,9 @@ const verifyApiKey = (req: Request, res: Response, next: NextFunction) => {
   
   const providedKey = req.headers['x-api-key'];
   
-  // In development mode, allow requests without API key if env var is not set
-  if (process.env.NODE_ENV === 'development' && !process.env.API_KEY) {
+  // In development mode or when deployed to Vercel preview, be more permissive
+  if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === 'preview') {
+    console.log('Development environment: Skipping strict API key validation');
     return next();
   }
   
