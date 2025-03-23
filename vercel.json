@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && node fix-build.js && npm install process && CI=false npm run build",
+  "buildCommand": "cd frontend && npm install react-app-rewired process stream-http https-browserify browserify-zlib stream-browserify url webpack && CI=false npm run build",
   "outputDirectory": "frontend/build",
   "routes": [
     {
