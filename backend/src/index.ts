@@ -36,6 +36,13 @@ app.use(helmet()); // Set security headers
 // CORS configuration - more explicit handling
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow all origins if ALLOWED_ORIGINS is set to *
+    if (process.env.ALLOWED_ORIGINS === '*') {
+      console.log(`✅ CORS: Allowing all origins (wildcard)`);
+      callback(null, true);
+      return;
+    }
+
     // List of allowed origins
     const allowedOrigins = [
       'http://localhost:3000', 
