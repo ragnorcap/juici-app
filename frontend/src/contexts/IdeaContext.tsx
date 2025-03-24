@@ -3,7 +3,10 @@ import { getRandomIdea, saveFavorite, getFavorites, deleteFavorite, generatePRD 
 import { useAuth } from './AuthContext';
 
 interface Idea {
+  id?: string;
   prompt: string;
+  title?: string;
+  description?: string;
   categories?: string[];
 }
 
@@ -17,13 +20,14 @@ interface Favorite {
 
 interface IdeaContextType {
   currentIdea: Idea | null;
+  setCurrentIdea: React.Dispatch<React.SetStateAction<Idea | null>>;
   favorites: Favorite[];
   prdContent: string;
   isLoading: boolean;
   isGeneratingPRD: boolean;
   error: string | null;
   successMessage: string | null;
-  generateIdea: () => Promise<void>;
+  generateIdea: (categories?: string[]) => Promise<void>;
   saveToFavorites: (idea: Idea) => Promise<void>;
   removeFavorite: (id: number) => Promise<void>;
   generatePRD: (prompt: string) => Promise<string | null>;
@@ -33,6 +37,7 @@ interface IdeaContextType {
 
 const IdeaContext = createContext<IdeaContextType>({
   currentIdea: null,
+  setCurrentIdea: () => {},
   favorites: [],
   prdContent: '',
   isLoading: false,
@@ -51,7 +56,13 @@ export const useIdea = () => useContext(IdeaContext);
 
 export const IdeaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [currentIdea, setCurrentIdea] = useState<Idea | null>(null);
+  const [currentIdea, setCurrentIdea] = useState<Idea | null>({
+    id: 'default-idea',
+    prompt: 'Create a dashboard for FRED inflation data.',
+    title: 'Create a dashboard for FRED inflation data.',
+    description: 'Click generate to see more details or customize your idea.',
+    categories: ['Data', 'Web']
+  });
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [prdContent, setPrdContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -60,7 +71,7 @@ export const IdeaProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Generate a random idea
-  const generateIdea = async () => {
+  const generateIdea = async (categories?: string[]) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -75,7 +86,9 @@ export const IdeaProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data && data.prompt) {
         setCurrentIdea({
           prompt: data.prompt,
-          categories: []
+          title: data.prompt,
+          description: 'Click generate again to see more details or customize your idea.',
+          categories: categories || []
         });
       } else {
         throw new Error('Failed to get a random idea');
@@ -88,7 +101,9 @@ export const IdeaProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fallback to a default idea if the API fails
       setCurrentIdea({
         prompt: "Create a weather forecast app using public API data.",
-        categories: []
+        title: "Create a weather forecast app using public API data.",
+        description: 'A simple app to display weather forecasts based on user location.',
+        categories: categories || []
       });
     } finally {
       setIsLoading(false);
@@ -258,6 +273,7 @@ export const IdeaProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Context value
   const value = {
     currentIdea,
+    setCurrentIdea,
     favorites,
     prdContent,
     isLoading,

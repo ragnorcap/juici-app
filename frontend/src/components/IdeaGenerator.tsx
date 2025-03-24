@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { FiRefreshCw, FiCopy, FiHeart, FiCheckCircle, FiFileText } from 'react-icons/fi';
+import styled, { keyframes } from 'styled-components';
+import { FiRefreshCw, FiCopy, FiHeart, FiCheckCircle, FiFileText, FiAlertTriangle, FiFilter, FiCheck, FiX } from 'react-icons/fi';
 import axios from 'axios';
 import Button from './Button';
 import Card from './Card';
 import PRDModal from './PRDModal';
+import DocumentGenerator from './DocumentGenerator';
 import { useIdea } from '../contexts/IdeaContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Idea } from '../types';
 
 // Styled components
 const GeneratorContainer = styled.div`
@@ -88,18 +90,21 @@ const CategoryContainer = styled.div`
   max-width: 800px;
 `;
 
-const CategoryBadge = styled.div<{ isSelected: boolean }>`
+const CategoryBadge = styled.div<{ $isSelected?: boolean }>`
+  display: inline-block;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  margin: 0.3rem;
+  border-radius: 50px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: ${props => props.isSelected ? 'linear-gradient(135deg, #ADFF2F, #90EE90)' : 'rgba(255, 255, 255, 0.1)'};
-  color: ${props => props.isSelected ? '#000' : '#fff'};
+  transition: all 0.2s ease-in-out;
+  background-color: ${props => props.$isSelected ? props.theme.colors.purple.main : 'rgba(255, 255, 255, 0.1)'};
+  color: ${props => props.$isSelected ? 'white' : '#ccc'};
+  border: 1px solid ${props => props.$isSelected ? props.theme.colors.purple.main : 'rgba(255, 255, 255, 0.2)'};
   
   &:hover {
+    background-color: ${props => props.$isSelected ? props.theme.colors.purple.light : 'rgba(255, 255, 255, 0.2)'};
     transform: translateY(-2px);
-    background: ${props => props.isSelected ? 'linear-gradient(135deg, #ADFF2F, #90EE90)' : 'rgba(255, 255, 255, 0.2)'};
   }
 `;
 
@@ -114,13 +119,13 @@ const LoadingDots = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   
   span {
-    width: 12px;
-    height: 12px;
+    width: 17px;
+    height: 17px;
     border-radius: 50%;
-    background-color: ${props => props.theme.colors.green.main};
+    background: linear-gradient(135deg, #ADFF2F, #7CFC00);
     animation: dotPulse 1.5s infinite ease-in-out;
     
     &:nth-child(1) {
@@ -148,6 +153,61 @@ const LoadingDots = styled.div`
   }
 `;
 
+// Added missing styled components that were causing errors
+const ErrorContainer = styled.div`
+  text-align: center;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const ErrorMessage = styled.div`
+  color: #ff4d4f;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+`;
+
+const IdeaTitle = styled.h2`
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: ${props => props.theme.purple.light};
+`;
+
+const IdeaDescription = styled.p`
+  font-size: 1.2rem;
+  line-height: 1.6;
+  text-align: center;
+  margin: 1rem 0;
+`;
+
+const CategoryTag = styled.span`
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  background: rgba(173, 255, 47, 0.15);
+  color: #ADFF2F;
+  margin: 0.25rem;
+`;
+
+const EmptyStateContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+`;
+
+const EmptyStateText = styled.p`
+  font-size: 1.2rem;
+  color: ${props => props.theme.textLight};
+  text-align: center;
+`;
+
 const CopiedNotification = styled.div`
   position: fixed;
   bottom: 2rem;
@@ -170,18 +230,19 @@ const CopiedNotification = styled.div`
 `;
 
 // PRD Modal components
-const ModalOverlay = styled.div<{ isOpen: boolean }>`
+const ModalOverlay = styled.div<{ $isOpen: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.7);
-  display: ${props => props.isOpen ? 'flex' : 'none'};
+  backdrop-filter: blur(5px);
+  display: ${props => props.$isOpen ? 'flex' : 'none'};
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 2rem;
+  padding: 20px;
 `;
 
 const ModalContent = styled.div`
@@ -301,8 +362,8 @@ const SuccessNotification = styled.div`
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: ${props => props.theme.colors.green.main};
-  color: #000;
+  background: ${props => props.theme.purple.main};
+  color: #fff;
   padding: 1rem;
   border-radius: ${props => props.theme.borderRadius};
   display: flex;
@@ -336,6 +397,54 @@ const ErrorNotification = styled.div`
   gap: 0.5rem;
   z-index: 1000;
   animation: slideIn 0.3s forwards;
+`;
+
+const FilterSection = styled.div`
+  width: 100%;
+  max-width: 800px;
+  margin-top: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const FilterTitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: ${props => props.theme.colors.green.light};
+  
+  &:hover {
+    color: ${props => props.theme.colors.yellow.main};
+  }
+`;
+
+const CategoryFilterContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+`;
+
+const CategoryFilterButton = styled.button<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid ${props => props.$active ? props.theme.colors.green.main : 'rgba(255, 255, 255, 0.2)'};
+  background: ${props => props.$active ? 'rgba(173, 255, 47, 0.2)' : 'transparent'};
+  color: ${props => props.$active ? props.theme.colors.green.light : '#ccc'};
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(173, 255, 47, 0.1);
+    border-color: ${props => props.theme.colors.green.main};
+  }
 `;
 
 // Sample categories
@@ -390,74 +499,281 @@ const markdownToHtml = (markdown: string): string => {
   return html;
 };
 
-// Update the component to use contexts
-const IdeaGenerator: React.FC = () => {
+// Add to the component interface
+interface IdeaGeneratorProps {
+  onOpenPRDModal?: (content: string) => void;
+}
+
+// Main component
+const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
+  // Get user from auth context
   const { user } = useAuth();
+  
+  // Get idea context values (only use what we know exists)
   const { 
     currentIdea, 
-    generateIdea, 
+    setCurrentIdea,
     saveToFavorites, 
     isLoading, 
-    error, 
+    error: contextError, 
     generatePRD, 
-    prdContent, 
-    isGeneratingPRD,
+    prdContent,
     successMessage,
-    refineIdea 
+    refineIdea
   } = useIdea();
+
+  // Local state
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showPRDModal, setShowPRDModal] = useState(false);
+  const [isGeneratingPRD, setIsGeneratingPRD] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [preloadedPrompts, setPreloadedPrompts] = useState<string[]>([]);
+  const [filteredPrompts, setFilteredPrompts] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Reference to track if initial idea has been set
+  const initialIdeaSetRef = React.useRef(false);
+  
+  // Categories for filtering
   const availableCategories = ['Web', 'Mobile', 'AI', 'Data', 'Tools', 'Social', 'Health', 'Finance', 'Education', 'Entertainment'];
   
-  // Generate a random idea on first load
+  // New state for document generator modal
+  const [showDocumentGenerator, setShowDocumentGenerator] = useState(false);
+  const [currentPrdContent, setCurrentPrdContent] = useState('');
+  
+  // Fetch prompts from API on component mount
   useEffect(() => {
-    if (!currentIdea) {
-      generateIdea();
-    }
-  }, [currentIdea, generateIdea]);
-  
-  // Toggle category selection
-  const toggleCategory = (category: string) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
-    }
-  };
-  
-  // Copy idea to clipboard
-  const copyToClipboard = () => {
-    if (currentIdea) {
-      navigator.clipboard.writeText(currentIdea.prompt);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-  
-  // Save the current idea to favorites
-  const handleSaveToFavorites = async () => {
-    if (currentIdea && user) {
-      await saveToFavorites({
-        ...currentIdea,
-        categories: selectedCategories
-      });
-    } else if (!user) {
-      // Show login required message
-      // You can add state for this or use the error state from context
-    }
-  };
-  
-  // Generate a PRD for the current idea
-  const handleGeneratePRD = async () => {
-    if (currentIdea) {
-      const content = await generatePRD(currentIdea.prompt);
-      if (content) {
-        setShowPRDModal(true);
+    const fetchPrompts = async () => {
+      try {
+        console.log("Fetching prompts from API...");
+        const response = await fetch('/api/prompts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch prompts');
+        }
+        const data = await response.json();
+        console.log("Received prompts data:", data);
+        
+        if (data.prompts && Array.isArray(data.prompts) && data.prompts.length > 0) {
+          // Set prompts from API data
+          setPreloadedPrompts(data.prompts);
+          setFilteredPrompts(data.prompts);
+          
+          // Only set an initial idea if currentIdea is null
+          if (!currentIdea) {
+            console.log("Setting initial idea from API prompts");
+            const randomIndex = Math.floor(Math.random() * data.prompts.length);
+            const randomPrompt = data.prompts[randomIndex];
+            const promptCategories = categorizePrompt(randomPrompt);
+            
+            setCurrentIdea({
+              id: 'initial-idea-' + Date.now(),
+              prompt: randomPrompt,
+              title: randomPrompt,
+              description: 'Select categories and click generate for more ideas.',
+              categories: promptCategories
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching prompts:', error);
+        setError('Failed to load prompts. Please try again.');
+        
+        // Set fallback prompts
+        const fallbackPrompts = [
+          "A mobile app that helps users track and reduce their carbon footprint",
+          "An AI-powered tool for personalizing online learning experiences",
+          "A sustainable food delivery service for eco-conscious consumers",
+          "A virtual reality platform for remote team collaboration",
+          "A healthcare scheduling system that reduces wait times and improves efficiency"
+        ];
+        setPreloadedPrompts(fallbackPrompts);
+        setFilteredPrompts(fallbackPrompts);
       }
+    };
+
+    fetchPrompts();
+  }, []); // Empty dependency array - only run on mount
+  
+  // Listen for category changes and filter prompts
+  useEffect(() => {
+    if (selectedCategories.length === 0) {
+      // If no categories selected, show all prompts
+      setFilteredPrompts(preloadedPrompts);
+      return;
+    }
+    
+    // Filter prompts that match at least one of the selected categories
+    const filtered = preloadedPrompts.filter(prompt => {
+      const promptCategories = categorizePrompt(prompt);
+      return selectedCategories.some(category => 
+        promptCategories.includes(category)
+      );
+    });
+    
+    setFilteredPrompts(filtered);
+  }, [selectedCategories, preloadedPrompts]);
+  
+  // Helper function to categorize prompts based on content
+  const categorizePrompt = (prompt: string): string[] => {
+    const categories = [];
+    
+    // Check for keywords in the prompt to categorize
+    if (/\b(web|website|browser|online platform|internet|site)\b/i.test(prompt)) {
+      categories.push('Web');
+    }
+    
+    if (/\b(mobile|app|ios|android|smartphone|tablet)\b/i.test(prompt)) {
+      categories.push('Mobile');
+    }
+    
+    if (/\b(ai|machine learning|neural|artificial intelligence|ml|nlp|gpt|algorithm)\b/i.test(prompt)) {
+      categories.push('AI');
+    }
+    
+    if (/\b(data|analytics|dashboard|visualization|metrics|statistics|charts)\b/i.test(prompt)) {
+      categories.push('Data');
+    }
+    
+    if (/\b(tool|utility|productivity|automation|plugin|extension)\b/i.test(prompt)) {
+      categories.push('Tools');
+    }
+    
+    if (/\b(social|community|network|sharing|collaboration|connect)\b/i.test(prompt)) {
+      categories.push('Social');
+    }
+    
+    if (/\b(health|wellness|fitness|medical|healthcare|mental health)\b/i.test(prompt)) {
+      categories.push('Health');
+    }
+    
+    if (/\b(finance|banking|payment|money|investment|budget|financial)\b/i.test(prompt)) {
+      categories.push('Finance');
+    }
+    
+    if (/\b(education|learning|teaching|school|students|courses|training)\b/i.test(prompt)) {
+      categories.push('Education');
+    }
+    
+    if (/\b(entertainment|game|music|video|streaming|media|play)\b/i.test(prompt)) {
+      categories.push('Entertainment');
+    }
+    
+    // If no categories were matched, add a default category
+    if (categories.length === 0) {
+      categories.push('General');
+    }
+    
+    return categories;
+  };
+  
+  // Handle category selection
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category);
+      } else {
+        return [...prev, category];
+      }
+    });
+  };
+  
+  // Generate new idea when button is clicked
+  const handleGenerateIdea = () => {
+    console.log("Generate button clicked");
+    if (filteredPrompts.length === 0) {
+      console.log("No filtered prompts available, using all prompts");
+      setFilteredPrompts(preloadedPrompts);
+    }
+    
+    // Use either filtered prompts or fallback to all prompts
+    const promptsToUse = filteredPrompts.length > 0 ? filteredPrompts : preloadedPrompts;
+    
+    // Get the current prompt to exclude it
+    const currentPrompt = currentIdea?.prompt || currentIdea?.title || '';
+    
+    // Filter out the current prompt to avoid showing the same one twice in a row
+    const availablePrompts = promptsToUse.filter(p => p !== currentPrompt);
+    
+    // If we somehow filtered everything out, just use all prompts
+    const finalPrompts = availablePrompts.length > 0 ? availablePrompts : promptsToUse;
+    
+    // Select a random prompt
+    const randomIndex = Math.floor(Math.random() * finalPrompts.length);
+    const randomPrompt = finalPrompts[randomIndex];
+    
+    console.log(`Selected random prompt: ${randomPrompt}`);
+    
+    // Categorize it
+    const promptCategories = categorizePrompt(randomPrompt);
+    
+    // Create the new idea
+    setCurrentIdea({
+      id: 'generated-idea-' + Date.now(),
+      prompt: randomPrompt,
+      title: randomPrompt,
+      description: 'A custom generated idea based on your selected categories.',
+      categories: promptCategories
+    });
+  };
+  
+  // Generate PRD when button is clicked
+  const handleGeneratePRD = async () => {
+    if (!currentIdea) return;
+    
+    setIsGeneratingPRD(true);
+    
+    try {
+      // Make a real API call to generate the PRD
+      const response = await fetch('/api/generate-prd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idea: currentIdea }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Generated PRD response:', data);
+      
+      // Open document generator with the PRD content
+      if (data.prdContent) {
+        setCurrentPrdContent(data.prdContent);
+        setShowDocumentGenerator(true);
+      }
+    } catch (error) {
+      console.error('Error generating PRD:', error);
+      setError('Failed to generate PRD. Please try again.');
+    } finally {
+      setIsGeneratingPRD(false);
     }
   };
   
+  // Handle retry if error occurs
+  const handleRetry = () => {
+    setError(null);
+    const fetchPrompts = async () => {
+      try {
+        const response = await fetch('/api/prompts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch prompts');
+        }
+        const data = await response.json();
+        setPreloadedPrompts(data.prompts);
+        setFilteredPrompts(data.prompts);
+      } catch (error) {
+        console.error('Error retrying prompts fetch:', error);
+        setError('Failed to load prompts. Please try again.');
+      }
+    };
+    fetchPrompts();
+  };
+  
+  // Render the component
   return (
     <GeneratorContainer>
       <div>
@@ -465,98 +781,105 @@ const IdeaGenerator: React.FC = () => {
         <Subtitle>Get your creative juices flowing with randomly generated project ideas. Click "Generate" for a new idea.</Subtitle>
       </div>
       
-      <CategoryContainer>
-        {availableCategories.map(category => (
-          <CategoryBadge 
-            key={category}
-            isSelected={selectedCategories.includes(category)}
-            onClick={() => toggleCategory(category)}
-          >
-            {category}
-          </CategoryBadge>
-        ))}
-      </CategoryContainer>
-      
-      <IdeaCard>
-        {isLoading ? (
-          <LoadingIndicator>
-            <LoadingDots>
-              <span></span>
-              <span></span>
-              <span></span>
-            </LoadingDots>
-          </LoadingIndicator>
-        ) : currentIdea ? (
-          <IdeaText>{currentIdea.prompt}</IdeaText>
-        ) : (
-          <IdeaText>Click Generate to get started</IdeaText>
-        )}
-        
-        <ButtonContainer>
-          <Button 
-            onClick={generateIdea} 
-            icon={<FiRefreshCw />}
-            disabled={isLoading}
-          >
-            Generate
+      {error ? (
+        <ErrorContainer>
+          <ErrorMessage><FiAlertTriangle /> {error}</ErrorMessage>
+          <Button variant="secondary" onClick={handleRetry}>
+            Try Again
           </Button>
+        </ErrorContainer>
+      ) : isLoading ? (
+        <LoadingIndicator>
+          <LoadingDots>
+            <span></span>
+            <span></span>
+            <span></span>
+          </LoadingDots>
+        </LoadingIndicator>
+      ) : (
+        <>
+          <IdeaCard>
+            {currentIdea ? (
+              <>
+                <IdeaTitle>{currentIdea.title}</IdeaTitle>
+                <IdeaDescription>{currentIdea.description}</IdeaDescription>
+                <CategoryContainer>
+                  {currentIdea.categories && currentIdea.categories.length > 0 ? (
+                    currentIdea.categories.map((category, index) => (
+                      <CategoryTag key={index}>{category}</CategoryTag>
+                    ))
+                  ) : (
+                    <CategoryTag>General</CategoryTag>
+                  )}
+                </CategoryContainer>
+                
+                <ActionButtonsContainer>
+                  <Button 
+                    onClick={handleGenerateIdea} 
+                    disabled={isLoading}
+                    $hasIcon={true}
+                    icon={<FiRefreshCw />}
+                    variant="primary"
+                  >
+                    Generate New Idea
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleGeneratePRD} 
+                    disabled={isLoading || isGeneratingPRD || !currentIdea}
+                    variant="primary" 
+                    $hasIcon={true}
+                    icon={<FiFileText />}
+                  >
+                    Generate PRD
+                  </Button>
+                </ActionButtonsContainer>
+              </>
+            ) : (
+              <EmptyStateContainer>
+                <EmptyStateText>
+                  A mobile app that helps users track and reduce their carbon footprint
+                </EmptyStateText>
+                <CategoryContainer>
+                  <CategoryTag>Mobile</CategoryTag>
+                  <CategoryTag>Social</CategoryTag>
+                  <CategoryTag>Health</CategoryTag>
+                </CategoryContainer>
+              </EmptyStateContainer>
+            )}
+          </IdeaCard>
           
-          <Button 
-            onClick={copyToClipboard} 
-            variant="secondary" 
-            icon={copied ? <FiCheckCircle /> : <FiCopy />}
-            disabled={!currentIdea || isLoading}
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </Button>
-          
-          <Button 
-            onClick={handleSaveToFavorites} 
-            variant="secondary" 
-            icon={<FiHeart />}
-            disabled={!currentIdea || isLoading || !user}
-          >
-            Save to Favorites
-          </Button>
-          
-          <Button 
-            onClick={handleGeneratePRD} 
-            variant="secondary" 
-            icon={<FiFileText />}
-            disabled={!currentIdea || isGeneratingPRD}
-            loading={isGeneratingPRD}
-          >
-            Generate PRD
-          </Button>
-        </ButtonContainer>
-      </IdeaCard>
-      
-      {showPRDModal && (
-        <PRDModal 
-          isOpen={showPRDModal} 
-          content={prdContent} 
-          onClose={() => setShowPRDModal(false)} 
-          originalPrompt={currentIdea?.prompt || ''}
-        />
+          <FilterSection>
+            <FilterTitle onClick={() => setShowFilters(!showFilters)}>
+              <FiFilter /> Category Filters
+            </FilterTitle>
+            
+            {showFilters && (
+              <CategoryFilterContainer>
+                {availableCategories.map(category => (
+                  <CategoryFilterButton
+                    key={category}
+                    $active={selectedCategories.includes(category)}
+                    onClick={() => toggleCategory(category)}
+                  >
+                    {selectedCategories.includes(category) ? (
+                      <FiCheck size={12} style={{ marginRight: '4px' }} />
+                    ) : null}
+                    {category}
+                  </CategoryFilterButton>
+                ))}
+              </CategoryFilterContainer>
+            )}
+          </FilterSection>
+        </>
       )}
       
-      {copied && (
-        <CopiedNotification>
-          <FiCheckCircle /> Copied to clipboard!
-        </CopiedNotification>
-      )}
-      
-      {successMessage && (
-        <SuccessNotification>
-          <FiCheckCircle /> {successMessage}
-        </SuccessNotification>
-      )}
-      
-      {error && (
-        <ErrorNotification>
-          {error}
-        </ErrorNotification>
-      )}
+      {/* Document Generator Modal */}
+      <DocumentGenerator 
+        isOpen={showDocumentGenerator}
+        onClose={() => setShowDocumentGenerator(false)}
+        initialContent={currentPrdContent}
+      />
     </GeneratorContainer>
   );
 };

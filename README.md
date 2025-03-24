@@ -126,4 +126,42 @@ MIT License
 - UI design inspired by modern juice brands and creative platforms
 - Logo and branding designed in-house
 
+## Deployment
+
+### Deploying to Vercel
+
+This project is configured for deployment on Vercel. Follow these steps:
+
+1. Push your changes to GitHub
+```
+git add .
+git commit -m "Your commit message"
+git push origin main
+```
+
+2. Connect your repository to Vercel
+   - Go to [Vercel](https://vercel.com) and sign in
+   - Click "Add New" > "Project"
+   - Import your GitHub repository
+   - Configure the project:
+     - Framework Preset: Other
+     - Root Directory: `./`
+     - Build Command: `npm run build`
+     - Output Directory: `frontend/build`
+
+3. Environment Variables
+   - Add the following environment variables in Vercel:
+     - `OPENAI_API_KEY`: Your OpenAI API key
+     - `NODE_ENV`: `production`
+
+4. Deploy
+   - Click "Deploy" and wait for the build to complete
+
+### Production Considerations
+
+- The app uses OpenAI API which requires a valid API key
+- Make sure all API endpoints are properly secured
+- Ensure CORS is properly configured for your production domain
+- The middleware handles CSP headers automatically
+
 

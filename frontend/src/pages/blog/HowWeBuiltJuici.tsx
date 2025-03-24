@@ -128,6 +128,23 @@ const InsightBox = styled.div`
   }
 `;
 
+interface ModalOverlayProps {
+  $isOpen: boolean;
+}
+
+const ModalOverlay = styled.div<ModalOverlayProps>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: ${props => (props.$isOpen ? 'flex' : 'none')};
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+`;
+
 const HowWeBuiltJuici: React.FC = () => {
   return (
     <Layout>
@@ -274,8 +291,7 @@ Cursor: I'll create a monorepo structure for your full-stack app. Let me set up 
 }
 \`\`\`
 
-2. Now let's set up the frontend directory structure...
-`}
+2. Now let's set up the frontend directory structure...`}
           </CodeBlock>
           
           <p>
@@ -333,7 +349,6 @@ const ModalOverlay = styled.div<{ isOpen: boolean }>\`
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 \`;
 
 // ...rest of the component
@@ -454,173 +469,16 @@ router.post('/favorites', favoritesController.addFavorite);
 I recommend option 2 since it follows REST conventions better.`}
           </CodeBlock>
           
-          <h2>Challenges and Solutions</h2>
-          
-          <h3>Challenge 1: State Management Complexity</h3>
-          <p>
-            As the application grew, managing state became increasingly complex. 
-            We were using a combination of React context and local component state, 
-            which led to inconsistencies and prop drilling.
-          </p>
-          
-          <p>
-            <strong>Solution:</strong> Claude recommended refactoring to use 
-            React Query for server state management and a simpler context 
-            structure for global UI state. This significantly cleaned up our 
-            codebase and improved performance.
-          </p>
-          
-          <h3>Challenge 2: Handling Authentication</h3>
-          <p>
-            Implementing secure authentication with proper token refresh logic 
-            and route protection was proving complex.
-          </p>
-          
-          <p>
-            <strong>Solution:</strong> Claude guided us in implementing a 
-            complete JWT-based authentication system, including secure HTTP-only 
-            cookies, token refresh logic, and protected route components.
-          </p>
-          
-          <CodeBlock language="typescript">
-{`// Claude-generated authentication middleware
-export const authMiddleware = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-) => {
-  try {
-    const token = req.cookies.accessToken;
-    
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-    
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-      req.user = decoded;
-      next();
-    } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        // Try to refresh the token
-        const refreshToken = req.cookies.refreshToken;
-        
-        if (!refreshToken) {
-          return res.status(401).json({ message: 'Session expired' });
-        }
-        
-        try {
-          const decoded = jwt.verify(
-            refreshToken, 
-            process.env.JWT_REFRESH_SECRET as string
-          ) as JwtPayload;
-          
-          // Generate new access token
-          const user = await User.findById(decoded.userId);
-          
-          if (!user) {
-            return res.status(401).json({ message: 'User not found' });
-          }
-          
-          const newAccessToken = generateAccessToken(user);
-          
-          // Set the new access token as a cookie
-          res.cookie('accessToken', newAccessToken, { 
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 15 * 60 * 1000 // 15 minutes
-          });
-          
-          req.user = decoded;
-          next();
-        } catch (refreshError) {
-          return res.status(401).json({ message: 'Invalid refresh token' });
-        }
-      } else {
-        return res.status(401).json({ message: 'Invalid token' });
-      }
-    }
-  } catch (error) {
-    return res.status(500).json({ message: 'Server error' });
-  }
-};`}
-          </CodeBlock>
-          
-          <h3>Challenge 3: Optimizing Claude API Usage</h3>
-          <p>
-            Generating PRDs with Claude requires careful prompt engineering to 
-            get consistent, well-structured results while managing API costs.
-          </p>
-          
-          <p>
-            <strong>Solution:</strong> We built a sophisticated prompting system 
-            that includes templates, system messages, and structured output 
-            formatting. Claude helped us fine-tune these prompts for optimal 
-            results.
-          </p>
-          
-          <h2>Key Lessons</h2>
-          
-          <h3>1. AI as a Development Partner</h3>
-          <p>
-            The most significant insight from this project was that Claude 
-            functioned less like a tool and more like a development partner. It 
-            didn't just generate code snippets; it suggested architecture 
-            improvements, identified potential issues before they became problems, 
-            and provided valuable context for technical decisions.
-          </p>
-          
-          <h3>2. Rapid Iteration</h3>
-          <p>
-            Using Claude in Cursor allowed us to iterate at an unprecedented speed. 
-            What would typically take days of development time was reduced to 
-            hours or even minutes. This was particularly valuable for UI components, 
-            where we could quickly generate, review, and refine multiple versions.
-          </p>
-          
-          <h3>3. Knowledge Amplification</h3>
-          <p>
-            Claude enabled our team to work effectively with technologies where 
-            we had less expertise. When working with unfamiliar libraries or APIs, 
-            Claude could fill in the knowledge gaps, explaining concepts and 
-            providing implementation examples tailored to our specific needs.
-          </p>
-          
-          <h2>Project Statistics</h2>
-          <ul>
-            <li><strong>Development Time:</strong> 2 weeks (estimated traditional time: 2-3 months)</li>
-            <li><strong>Lines of Code:</strong> ~15,000</li>
-            <li><strong>Components Created:</strong> 45+ React components</li>
-            <li><strong>API Endpoints:</strong> 15+ Express routes</li>
-            <li><strong>Claude Interactions:</strong> 500+ during development</li>
-          </ul>
-          
           <h2>Conclusion</h2>
           <p>
-            Building Juici with Claude 3.7 Sonnet and Cursor fundamentally 
-            changed our perspective on software development. The combination of 
-            a powerful AI model with a developer-focused IDE created a 
-            multiplicative effect on productivity.
+            Building Juici with Claude and Cursor dramatically accelerated our development 
+            process while maintaining high code quality. The AI-assisted approach allowed 
+            us to focus on creative problem-solving rather than implementation details.
           </p>
           
           <p>
-            Perhaps most importantly, the quality of the resulting code was 
-            excellent—well-structured, thoroughly documented, and following best 
-            practices throughout. This challenges the notion that AI-assisted 
-            code is somehow of lower quality than traditionally written code.
-          </p>
-          
-          <p>
-            As AI coding assistants like Claude continue to advance, we believe 
-            this type of AI-augmented development will become the new standard, 
-            enabling developers to focus on high-level architecture and creative 
-            problem-solving while delegating implementation details to AI 
-            assistants.
-          </p>
-          
-          <p>
-            Ready to see what we built? Try out <Link to="/">Juici</Link> for 
-            yourself and experience the power of AI-generated product ideas and PRDs!
+            We believe this represents the future of software development, where AI serves 
+            as an intelligent collaborator that enhances developer productivity and creativity.
           </p>
         </Content>
       </PageContainer>
@@ -628,4 +486,4 @@ export const authMiddleware = async (
   );
 };
 
-export default HowWeBuiltJuici; 
+export default HowWeBuiltJuici;

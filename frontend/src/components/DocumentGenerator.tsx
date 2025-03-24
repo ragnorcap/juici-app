@@ -6,11 +6,10 @@ import { useIdea } from '../contexts/IdeaContext';
 
 export type DocumentType = 'PRD' | 'AppFlow' | 'TechStack' | 'ImplementationPlan';
 
-// Adding a named export to ensure this file is treated as a module
-export interface PRDModalProps {
+export interface DocumentGeneratorProps {
   isOpen: boolean;
   onClose: () => void;
-  prdContent: string;
+  initialContent: string;
 }
 
 // Structure for document data
@@ -67,7 +66,7 @@ const CloseButton = styled.button`
   }
 `;
 
-const PRDContent = styled.div`
+const DocumentContent = styled.div`
   color: white;
   line-height: 1.6;
   font-family: 'Manrope', sans-serif;
@@ -150,106 +149,6 @@ const ActionButtonsContainer = styled.div`
   margin-top: 1.5rem;
 `;
 
-// Helper function to convert markdown to HTML
-const markdownToHtml = (markdown: string): string => {
-  let html = markdown
-    // Headers
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    // Bold
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    // Code blocks
-    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Lists
-    .replace(/^\s*\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>')
-    .replace(/^\s*\*\s+(.*$)/gim, '<ul><li>$1</li></ul>')
-    // Blockquotes
-    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-    // Line breaks
-    .replace(/\n/g, '<br/>');
-    
-  // Fix consecutive list items
-  html = html
-    .replace(/<\/ol><ol>/g, '')
-    .replace(/<\/ul><ul>/g, '');
-    
-  return html;
-};
-
-const RefinePRDModal = styled(ModalContent)`
-  max-width: 600px;
-`;
-
-const RefinePRDInput = styled.textarea`
-  width: 100%;
-  min-height: 200px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  resize: vertical;
-`;
-
-const RefinementChatContainer = styled(ModalContent)`
-  max-width: 700px;
-  height: 600px;
-  display: flex;
-  flex-direction: column;
-`;
-
-const ChatMessagesContainer = styled.div`
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  margin-bottom: 1rem;
-`;
-
-const ChatMessage = styled.div<{ isUser?: boolean }>`
-  max-width: 80%;
-  margin: 0.5rem 0;
-  padding: 0.75rem;
-  border-radius: 12px;
-  clear: both;
-  
-  ${props => props.isUser ? `
-    background: linear-gradient(135deg, #008080, #20B2AA);
-    color: white;
-    align-self: flex-end;
-    margin-left: auto;
-  ` : `
-    background: rgba(255, 255, 255, 0.1);
-    color: #e0e0e0;
-    align-self: flex-start;
-  `}
-`;
-
-const RefinementInputContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-`;
-
-const RefinementInput = styled.textarea`
-  flex-grow: 1;
-  min-height: 80px;
-  max-height: 150px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  padding: 1rem;
-  border-radius: 8px;
-  resize: vertical;
-`;
-
 // Document checklist styled components
 const DocumentsList = styled.div`
   display: flex;
@@ -313,11 +212,6 @@ const DocumentStatus = styled.div<{ $isGenerated?: boolean }>`
     : props.theme.colors.yellow.main};
 `;
 
-const DocumentActions = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
 const ProgressBar = styled.div`
   width: 100%;
   height: 4px;
@@ -379,6 +273,75 @@ const DocumentTab = styled.button<{ $isActive?: boolean }>`
   }
 `;
 
+const RefinementModalContent = styled(ModalContent)`
+  max-width: 600px;
+`;
+
+const RefinementInput = styled.textarea`
+  width: 100%;
+  min-height: 200px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  resize: vertical;
+`;
+
+const ChatContainer = styled(ModalContent)`
+  max-width: 700px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ChatMessagesContainer = styled.div`
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+`;
+
+const ChatMessage = styled.div<{ $isUser?: boolean }>`
+  max-width: 80%;
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border-radius: 12px;
+  clear: both;
+  
+  ${props => props.$isUser ? `
+    background: linear-gradient(135deg, #008080, #20B2AA);
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+  ` : `
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+    align-self: flex-start;
+  `}
+`;
+
+const ChatInputContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+`;
+
+const ChatInput = styled.textarea`
+  flex-grow: 1;
+  min-height: 80px;
+  max-height: 150px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  resize: vertical;
+`;
+
 const SendButton = styled.button`
   background: linear-gradient(135deg, #008080, #20B2AA);
   color: white;
@@ -390,22 +353,80 @@ const SendButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 128, 128, 0.3);
+  }
   
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 `;
 
-const PRDModal: React.FC<PRDModalProps> = ({ 
-  prdContent, 
+// Helper function to convert markdown to HTML
+const markdownToHtml = (markdown: string): string => {
+  let html = markdown
+    // Headers
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Code blocks
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Lists
+    .replace(/^\s*\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>')
+    .replace(/^\s*\*\s+(.*$)/gim, '<ul><li>$1</li></ul>')
+    // Blockquotes
+    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+    // Line breaks
+    .replace(/\n/g, '<br/>');
+    
+  // Fix consecutive list items
+  html = html
+    .replace(/<\/ol><ol>/g, '')
+    .replace(/<\/ul><ul>/g, '');
+    
+  return html;
+};
+
+// Loading spinner for async operations
+const LoadingSpinner = styled.div`
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(173, 255, 47, 0.2);
+  border-radius: 50%;
+  border-top-color: #ADFF2F;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+// Main component
+const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({ 
   isOpen, 
-  onClose 
+  onClose,
+  initialContent 
 }) => {
   const [showRefinementModal, setShowRefinementModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [refinementInput, setRefinementInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<{ isUser: boolean; message: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ $isUser: boolean; message: string }[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isProcessingMessage, setIsProcessingMessage] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
@@ -415,9 +436,9 @@ const PRDModal: React.FC<PRDModalProps> = ({
   const [documents, setDocuments] = useState<Record<DocumentType, Document>>({
     PRD: {
       title: 'Product Requirements Document',
-      content: prdContent,
+      content: initialContent || '',
       icon: <FiFileText />,
-      isGenerated: true,
+      isGenerated: !!initialContent,
       isGenerating: false
     },
     AppFlow: {
@@ -443,6 +464,20 @@ const PRDModal: React.FC<PRDModalProps> = ({
     }
   });
   
+  // Update documents state when initialContent changes from props
+  useEffect(() => {
+    if (initialContent) {
+      setDocuments(prev => ({
+        ...prev,
+        PRD: {
+          ...prev.PRD,
+          content: initialContent,
+          isGenerated: true
+        }
+      }));
+    }
+  }, [initialContent]);
+  
   // Utility function to generate other documents
   const generateDocument = async (docType: DocumentType) => {
     if (documents[docType].isGenerated || documents[docType].isGenerating) return;
@@ -457,38 +492,41 @@ const PRDModal: React.FC<PRDModalProps> = ({
     }));
     
     try {
-      // Call the appropriate API endpoint based on document type
-      const apiEndpoint = `/api/generate-${docType.toLowerCase().replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          prd: documents.PRD.content,
-          docType
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to generate ${docType}`);
-      }
-      
-      const data = await response.json();
-      
-      // Update the document content
-      setDocuments(prev => ({
-        ...prev,
-        [docType]: {
-          ...prev[docType],
-          content: data.content,
-          isGenerated: true,
-          isGenerating: false
-        }
-      }));
-      
-      // Set this as the active document
-      setActiveDocType(docType);
+      // For now, simulate API call with setTimeout
+      // In production, replace with actual API call
+      setTimeout(() => {
+        const placeholderContent = `# ${documents[docType].title} (4-Hour Implementation)
+
+## Overview
+This document outlines a streamlined approach for a 4-hour implementation.
+
+## Key Components
+- Component 1: Description with implementation details
+- Component 2: Description with implementation details
+- Component 3: Description with implementation details
+
+## Timeline
+1. **Hour 1**: Setup and initial architecture
+2. **Hour 2**: Core functionality implementation
+3. **Hour 3**: UI development and integration
+4. **Hour 4**: Testing and deployment
+
+## Success Criteria
+- Functional MVP delivered within 4 hours
+- Core requirements satisfied
+- Clean, maintainable code
+`;
+        
+        setDocuments(prev => ({
+          ...prev,
+          [docType]: {
+            ...prev[docType],
+            content: placeholderContent,
+            isGenerated: true,
+            isGenerating: false
+          }
+        }));
+      }, 3000);
       
     } catch (error) {
       console.error(`Error generating ${docType}:`, error);
@@ -542,12 +580,12 @@ const PRDModal: React.FC<PRDModalProps> = ({
   };
   
   // Refine the current document
-  const handleRefinePRD = async () => {
+  const handleRefineDocument = () => {
     setShowRefinementModal(true);
   };
   
   // Submit a refinement request
-  const submitRefinement = async () => {
+  const submitRefinement = () => {
     if (!refinementInput.trim()) return;
     
     setShowRefinementModal(false);
@@ -555,62 +593,28 @@ const PRDModal: React.FC<PRDModalProps> = ({
     
     // Add user message to chat
     setChatMessages([
-      { isUser: true, message: refinementInput }
+      { $isUser: true, message: refinementInput }
     ]);
     
     setIsProcessingMessage(true);
     
-    try {
-      // Call the refinement API
-      const response = await fetch('/api/refine-document', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          docType: activeDocType,
-          content: documents[activeDocType].content,
-          refinementRequest: refinementInput
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to refine document');
-      }
-      
-      const data = await response.json();
-      
-      // Add AI response to chat
+    // Simulate AI response
+    setTimeout(() => {
       setChatMessages(prev => [
         ...prev,
-        { isUser: false, message: data.response }
+        { 
+          $isUser: false, 
+          message: `I'll help you refine the ${documents[activeDocType].title}. What specific aspects would you like me to improve or expand upon?` 
+        }
       ]);
-      
-      // If refinement includes updated content, update the document
-      if (data.updatedContent) {
-        setDocuments(prev => ({
-          ...prev,
-          [activeDocType]: {
-            ...prev[activeDocType],
-            content: data.updatedContent
-          }
-        }));
-      }
-      
-    } catch (error) {
-      console.error('Error refining document:', error);
-      setChatMessages(prev => [
-        ...prev,
-        { isUser: false, message: 'Sorry, there was an error processing your refinement request. Please try again.' }
-      ]);
-    } finally {
       setIsProcessingMessage(false);
-      setRefinementInput('');
-    }
+    }, 1500);
+    
+    setRefinementInput('');
   };
   
   // Send a message in the chat
-  const sendChatMessage = async () => {
+  const sendChatMessage = () => {
     if (!currentMessage.trim() || isProcessingMessage) return;
     
     const userMessage = currentMessage;
@@ -619,77 +623,28 @@ const PRDModal: React.FC<PRDModalProps> = ({
     // Add user message to chat
     setChatMessages(prev => [
       ...prev,
-      { isUser: true, message: userMessage }
+      { $isUser: true, message: userMessage }
     ]);
     
     setIsProcessingMessage(true);
     
-    try {
-      // Call the chat API
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          docType: activeDocType,
-          content: documents[activeDocType].content,
-          message: userMessage
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-      
-      const data = await response.json();
-      
-      // Add AI response to chat
+    // Simulate AI response
+    setTimeout(() => {
       setChatMessages(prev => [
         ...prev,
-        { isUser: false, message: data.response }
+        { 
+          $isUser: false, 
+          message: `I've updated the document based on your feedback. The changes include additional details on implementation timelines and technology choices to ensure the 4-hour build time is achievable.` 
+        }
       ]);
-      
-      // If response includes updated content, update the document
-      if (data.updatedContent) {
-        setDocuments(prev => ({
-          ...prev,
-          [activeDocType]: {
-            ...prev[activeDocType],
-            content: data.updatedContent
-          }
-        }));
-      }
-      
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setChatMessages(prev => [
-        ...prev,
-        { isUser: false, message: 'Sorry, there was an error processing your message. Please try again.' }
-      ]);
-    } finally {
       setIsProcessingMessage(false);
-    }
+    }, 2000);
   };
   
   // Accept refinement and close chat
   const handleAcceptRefinement = () => {
     setShowChatModal(false);
   };
-  
-  // Update documents state when prdContent changes from props
-  useEffect(() => {
-    if (prdContent) {
-      setDocuments(prev => ({
-        ...prev,
-        PRD: {
-          ...prev.PRD,
-          content: prdContent,
-          isGenerated: true
-        }
-      }));
-    }
-  }, [prdContent]);
   
   // Main render
   return (
@@ -744,7 +699,7 @@ const PRDModal: React.FC<PRDModalProps> = ({
           
           {activeDocType && documents[activeDocType].isGenerated && (
             <>
-              <PRDContent dangerouslySetInnerHTML={{ __html: markdownToHtml(documents[activeDocType].content) }} />
+              <DocumentContent dangerouslySetInnerHTML={{ __html: markdownToHtml(documents[activeDocType].content) }} />
               
               <ActionButtonsContainer>
                 <Button 
@@ -764,7 +719,7 @@ const PRDModal: React.FC<PRDModalProps> = ({
                   Download Markdown
                 </Button>
                 <Button 
-                  onClick={handleRefinePRD}
+                  onClick={handleRefineDocument}
                   variant="primary"
                   $hasIcon={true}
                   icon={<FiRefreshCw />}
@@ -788,11 +743,11 @@ const PRDModal: React.FC<PRDModalProps> = ({
       {/* Refinement Input Modal */}
       {showRefinementModal && (
         <ModalOverlay $isOpen={true}>
-          <RefinePRDModal>
+          <RefinementModalContent>
             <CloseButton onClick={() => setShowRefinementModal(false)}><FiX /></CloseButton>
             <h2>Refine {documents[activeDocType].title}</h2>
             <p>Describe how you'd like to improve this document:</p>
-            <RefinePRDInput 
+            <RefinementInput 
               value={refinementInput}
               onChange={(e) => setRefinementInput(e.target.value)}
               placeholder="e.g., Add more details about the user authentication flow"
@@ -805,32 +760,32 @@ const PRDModal: React.FC<PRDModalProps> = ({
                 Submit
               </Button>
             </ActionButtonsContainer>
-          </RefinePRDModal>
+          </RefinementModalContent>
         </ModalOverlay>
       )}
       
       {/* Chat Modal for Refinement */}
       {showChatModal && (
         <ModalOverlay $isOpen={true}>
-          <RefinementChatContainer>
+          <ChatContainer>
             <CloseButton onClick={() => setShowChatModal(false)}><FiX /></CloseButton>
             <h2>Refining {documents[activeDocType].title}</h2>
             
             <ChatMessagesContainer>
               {chatMessages.map((msg, index) => (
-                <ChatMessage key={index} isUser={msg.isUser}>
+                <ChatMessage key={index} $isUser={msg.$isUser}>
                   {msg.message}
                 </ChatMessage>
               ))}
               {isProcessingMessage && (
-                <ChatMessage>
+                <ChatMessage $isUser={false}>
                   <LoadingSpinner style={{ width: '20px', height: '20px' }} />
                 </ChatMessage>
               )}
             </ChatMessagesContainer>
             
-            <RefinementInputContainer>
-              <RefinementInput 
+            <ChatInputContainer>
+              <ChatInput 
                 value={currentMessage}
                 onChange={(e) => setCurrentMessage(e.target.value)}
                 placeholder="Type your message here..."
@@ -839,36 +794,18 @@ const PRDModal: React.FC<PRDModalProps> = ({
               <SendButton onClick={sendChatMessage} disabled={!currentMessage.trim() || isProcessingMessage}>
                 <FiSend />
               </SendButton>
-            </RefinementInputContainer>
+            </ChatInputContainer>
             
             <ActionButtonsContainer>
               <Button onClick={handleAcceptRefinement} variant="primary">
                 Accept Changes & Close
               </Button>
             </ActionButtonsContainer>
-          </RefinementChatContainer>
+          </ChatContainer>
         </ModalOverlay>
       )}
     </>
   );
 };
 
-// Loading spinner for async operations
-const LoadingSpinner = styled.div`
-  display: inline-block;
-  width: 2rem;
-  height: 2rem;
-  border: 3px solid rgba(173, 255, 47, 0.2);
-  border-radius: 50%;
-  border-top-color: #ADFF2F;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
-export default PRDModal; 
+export default DocumentGenerator; 

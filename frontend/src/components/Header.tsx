@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX } from 'react-icons/fi';
+import { FiMenu, FiX, FiArrowRight, FiZap } from 'react-icons/fi';
 import Button from './Button';
 import { getCurrentUser, signOut } from '../lib/supabase';
 import Logo from './Logo';
@@ -27,26 +27,26 @@ const HeaderContainer = styled.header`
   }
 `;
 
-const NavLinks = styled.nav<{ isOpen: boolean }>`
+const NavLinks = styled.nav<{ $isOpen: boolean }>`
   display: flex;
   align-items: center;
   gap: 2rem;
-
+  
   @media (max-width: 768px) {
-    position: fixed;
-    top: 70px;
+    position: absolute;
+    top: 80px;
     left: 0;
     right: 0;
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     flex-direction: column;
-    padding: 2rem;
-    transform: ${({ isOpen }) => isOpen ? 'translateY(0)' : 'translateY(-150%)'};
-    opacity: ${({ isOpen }) => isOpen ? '1' : '0'};
-    transition: all 0.3s ease-in-out;
-    z-index: 99;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 2rem 1rem;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    transform: ${({ $isOpen }) => $isOpen ? 'translateY(0)' : 'translateY(-150%)'};
+    opacity: ${({ $isOpen }) => $isOpen ? '1' : '0'};
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
 `;
 
@@ -142,7 +142,7 @@ const Header: React.FC = () => {
         {isMenuOpen ? <FiX /> : <FiMenu />}
       </MobileMenuButton>
       
-      <NavLinks isOpen={isMenuOpen}>
+      <NavLinks $isOpen={isMenuOpen}>
         <NavLink to="/" $isActive={location.pathname === '/'}>
           Home
         </NavLink>
@@ -160,32 +160,24 @@ const Header: React.FC = () => {
         </NavLink>
         
         {isLoggedIn ? (
-          <AuthButtons>
-            <Button variant="tertiary" size="small" onClick={handleSignOut}>
-              Sign Out
-            </Button>
-          </AuthButtons>
-        ) : (
-          <AuthButtons>
-            <Button
-              variant="outline"
-              size="small"
-              onClick={() => {/* Navigate to Login */}}
-              as={Link}
-              to="/login"
-            >
-              Log In
-            </Button>
+          <div style={{ display: 'flex', gap: '1rem' }}>
             <Button
               variant="primary"
-              size="small"
-              onClick={() => {/* Navigate to Signup */}}
+              to="/app"
               as={Link}
-              to="/signup"
+              $hasIcon={true}
+              $iconPosition="right"
+              icon={<FiZap />}
             >
-              Sign Up
+              Launch App
             </Button>
-          </AuthButtons>
+            <Button onClick={handleSignOut} variant="outline">Logout</Button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Button onClick={() => {/* Navigate to Login */}} variant="outline">Login</Button>
+            <Button to="/signup" variant="primary">Sign Up</Button>
+          </div>
         )}
       </NavLinks>
     </HeaderContainer>

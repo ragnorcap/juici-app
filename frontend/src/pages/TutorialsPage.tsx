@@ -1,224 +1,274 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { FiArrowRight, FiCopy, FiFileText, FiStar, FiCode } from 'react-icons/fi';
+import { FiBook, FiClipboard, FiStar, FiTool, FiLink, FiFolder } from 'react-icons/fi';
 import Layout from '../components/Layout';
-import Card from '../components/Card';
+
+// Tutorial data
+const tutorials = [
+  {
+    id: 1,
+    title: 'Getting Started with Juici',
+    description: 'Learn the basics of Juici and how to generate your first idea.',
+    icon: <FiBook />,
+    path: '/tutorials/getting-started',
+    level: 'Beginner',
+    duration: '5 min',
+    category: 'Basics'
+  },
+  {
+    id: 2,
+    title: 'Creating PRDs with Juici',
+    description: 'Turn your idea into a detailed Product Requirements Document (PRD).',
+    icon: <FiClipboard />,
+    path: '/tutorials/creating-prds',
+    level: 'Intermediate',
+    duration: '10 min',
+    category: 'PRDs'
+  },
+  {
+    id: 3,
+    title: 'Advanced Techniques',
+    description: 'Learn advanced techniques for refining ideas and getting the most out of Juici.',
+    icon: <FiTool />,
+    path: '/tutorials/advanced-techniques',
+    level: 'Advanced',
+    duration: '15 min',
+    category: 'Advanced'
+  },
+  {
+    id: 4,
+    title: 'API Integration',
+    description: 'Integrate Juici into your own applications using our API.',
+    icon: <FiLink />,
+    path: '/tutorials/api-integration',
+    level: 'Expert',
+    duration: '20 min',
+    category: 'Development'
+  },
+  {
+    id: 5,
+    title: 'Organizing Favorites',
+    description: 'Tips and tricks for organizing and managing your favorite ideas.',
+    icon: <FiStar />,
+    path: '/tutorials/organizing-favorites',
+    level: 'Intermediate',
+    duration: '8 min',
+    category: 'Organization'
+  }
+];
 
 // Styled components
 const PageContainer = styled.div`
-  padding: 2rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 `;
 
-const Title = styled.h1`
+const PageTitle = styled.h1`
   font-size: 2.5rem;
-  text-align: center;
   margin-bottom: 0.5rem;
-  
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
+  color: ${props => props.theme.text};
 `;
 
-const Subtitle = styled.p`
+const PageSubtitle = styled.p`
   font-size: 1.2rem;
-  text-align: center;
-  color: #ccc;
-  max-width: 800px;
-  margin: 0 auto 2.5rem;
-  
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
+  margin-bottom: 3rem;
+  color: ${props => props.theme.textLight};
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 const TutorialsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
   
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(3, 1fr);
   }
 `;
 
-const TutorialCard = styled(Card)`
+const TutorialCard = styled(Link)`
   display: flex;
   flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-  transition: transform 0.3s ease;
+  background: rgba(64, 223, 223, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(64, 223, 223, 0.2);
+  border-radius: ${props => props.theme.borderRadius};
+  padding: 1.5rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  height: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
   
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-color: ${props => props.theme.green.main};
   }
 `;
 
-const TutorialImage = styled.div<{ color: string }>`
-  height: 160px;
-  background: ${props => props.color};
+const TutorialIcon = styled.div`
+  font-size: 2rem;
+  color: ${props => props.theme.green.main};
+  margin-bottom: 1rem;
+  background: rgba(64, 223, 223, 0.1);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  color: white;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
-const TutorialContent = styled.div`
-  padding: 1.5rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-`;
-
-const TutorialTitle = styled.h3`
+const TutorialTitle = styled.h2`
   font-size: 1.3rem;
   margin-bottom: 0.75rem;
-  color: ${props => props.theme.colors.green.light};
+  color: ${props => props.theme.text};
 `;
 
 const TutorialDescription = styled.p`
   font-size: 0.95rem;
-  color: #ccc;
-  line-height: 1.5;
+  color: ${props => props.theme.textLight};
+  flex-grow: 1;
   margin-bottom: 1.5rem;
-  flex: 1;
 `;
 
-const TutorialFooter = styled.div`
+const TutorialMeta = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-top: auto;
 `;
 
-const TutorialReadMore = styled(Link)`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: ${props => props.theme.colors.yellow.main};
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-  
-  &:hover {
-    color: ${props => props.theme.colors.yellow.light};
-  }
+const TutorialMetaItem = styled.div`
+  font-size: 0.85rem;
+  color: ${props => props.theme.textLight};
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
 `;
 
-const TutorialLevel = styled.span<{ level: 'beginner' | 'intermediate' | 'advanced' }>`
-  font-size: 0.8rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+const TutorialLevel = styled(TutorialMetaItem)<{ level: string }>`
   background: ${props => {
-    switch (props.level) {
-      case 'beginner':
-        return 'rgba(173, 255, 47, 0.15)';
-      case 'intermediate':
-        return 'rgba(255, 193, 7, 0.15)';
-      case 'advanced':
-        return 'rgba(255, 87, 34, 0.15)';
+    switch(props.level) {
+      case 'Beginner':
+        return 'rgba(64, 223, 223, 0.2)';
+      case 'Intermediate':
+        return 'rgba(138, 79, 255, 0.2)';
+      case 'Advanced':
+        return 'rgba(255, 173, 66, 0.2)';
+      case 'Expert':
+        return 'rgba(255, 92, 92, 0.2)';
+      default:
+        return 'rgba(64, 223, 223, 0.2)';
     }
   }};
   color: ${props => {
-    switch (props.level) {
-      case 'beginner':
-        return '#ADFF2F';
-      case 'intermediate':
-        return '#FFC107';
-      case 'advanced':
-        return '#FF5722';
+    switch(props.level) {
+      case 'Beginner':
+        return props.theme.green.main;
+      case 'Intermediate':
+        return props.theme.purple.main;
+      case 'Advanced':
+        return props.theme.yellow.main;
+      case 'Expert':
+        return props.theme.red.main;
+      default:
+        return props.theme.green.main;
     }
   }};
 `;
 
-// Define tutorial data
-const tutorials = [
-  {
-    id: 'getting-started',
-    title: 'Getting Started with Juici',
-    description: 'Learn the basics of generating creative project ideas and turning them into detailed PRDs.',
-    level: 'beginner',
-    icon: <FiFileText />,
-    color: '#6930C3',
-    slug: '/tutorials/getting-started'
-  },
-  {
-    id: 'creating-prds',
-    title: 'Creating Professional PRDs',
-    description: 'How to generate comprehensive Product Requirements Documents from your project ideas.',
-    level: 'beginner',
-    icon: <FiFileText />,
-    color: '#8A4FFF',
-    slug: '/tutorials/creating-prds'
-  },
-  {
-    id: 'using-with-cursor',
-    title: 'Using Juici with Cursor',
-    description: 'Learn how to use Juici-generated PRDs with Cursor IDE to kickstart your development.',
-    level: 'intermediate',
-    icon: <FiCode />,
-    color: '#48BFE3',
-    slug: '/tutorials/using-with-cursor'
-  },
-  {
-    id: 'organizing-favorites',
-    title: 'Managing Your Favorite Ideas',
-    description: 'How to save, organize and retrieve your favorite project ideas for future use.',
-    level: 'beginner',
-    icon: <FiStar />,
-    color: '#F9A826',
-    slug: '/tutorials/organizing-favorites'
-  },
-  {
-    id: 'advanced-techniques',
-    title: 'Advanced Juici Techniques',
-    description: 'Expert tips for customizing prompts and getting the most detailed and useful PRDs.',
-    level: 'advanced',
-    icon: <FiCopy />,
-    color: '#64DFDF',
-    slug: '/tutorials/advanced-techniques'
-  },
-  {
-    id: 'api-integration',
-    title: 'API Integration Guide',
-    description: 'How to integrate Juici\'s idea generation and PRD creation capabilities into your own projects.',
-    level: 'advanced',
-    icon: <FiCode />,
-    color: '#B088F9',
-    slug: '/tutorials/api-integration'
-  }
-];
+const CategoriesContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+`;
 
-// Main component
+const CategoryButton = styled.button<{ active?: boolean }>`
+  background: ${props => props.active ? 'rgba(64, 223, 223, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
+  border: 1px solid ${props => props.active ? props.theme.green.main : 'transparent'};
+  color: ${props => props.active ? props.theme.green.main : props.theme.textLight};
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    background: rgba(64, 223, 223, 0.1);
+    color: ${props => props.theme.green.main};
+  }
+`;
+
 const TutorialsPage: React.FC = () => {
+  const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
+  
+  // Get unique categories
+  const categories = Array.from(new Set(tutorials.map(tutorial => tutorial.category)));
+  
+  // Filter tutorials by category
+  const filteredTutorials = activeCategory
+    ? tutorials.filter(tutorial => tutorial.category === activeCategory)
+    : tutorials;
+    
   return (
     <Layout>
       <PageContainer>
-        <Title>Tutorials & Guides</Title>
-        <Subtitle>
-          Learn how to use Juici to generate creative project ideas 
-          and turn them into comprehensive Product Requirements Documents
-        </Subtitle>
+        <PageTitle>Juici Tutorials</PageTitle>
+        <PageSubtitle>
+          Learn how to use Juici to generate ideas, create PRDs, and accelerate your product development process.
+        </PageSubtitle>
+        
+        <CategoriesContainer>
+          <CategoryButton 
+            active={activeCategory === null} 
+            onClick={() => setActiveCategory(null)}
+          >
+            <FiFolder /> All Categories
+          </CategoryButton>
+          
+          {categories.map(category => (
+            <CategoryButton
+              key={category}
+              active={activeCategory === category}
+              onClick={() => setActiveCategory(category)}
+            >
+              {category === 'Basics' && <FiBook />}
+              {category === 'PRDs' && <FiClipboard />}
+              {category === 'Advanced' && <FiTool />}
+              {category === 'Development' && <FiLink />}
+              {category === 'Organization' && <FiStar />}
+              {category}
+            </CategoryButton>
+          ))}
+        </CategoriesContainer>
         
         <TutorialsGrid>
-          {tutorials.map(tutorial => (
-            <TutorialCard key={tutorial.id} variant="glass">
-              <TutorialImage color={tutorial.color}>
-                {tutorial.icon}
-              </TutorialImage>
-              <TutorialContent>
+          {filteredTutorials.map(tutorial => (
+            <TutorialCard key={tutorial.id} to={tutorial.path}>
+              <TutorialIcon>{tutorial.icon}</TutorialIcon>
                 <TutorialTitle>{tutorial.title}</TutorialTitle>
                 <TutorialDescription>{tutorial.description}</TutorialDescription>
-                <TutorialFooter>
-                  <TutorialLevel level={tutorial.level as 'beginner' | 'intermediate' | 'advanced'}>
-                    {tutorial.level.charAt(0).toUpperCase() + tutorial.level.slice(1)}
-                  </TutorialLevel>
-                  <TutorialReadMore to={`/blog${tutorial.slug}`}>
-                    Read More <FiArrowRight />
-                  </TutorialReadMore>
-                </TutorialFooter>
-              </TutorialContent>
+              <TutorialMeta>
+                <TutorialLevel level={tutorial.level}>{tutorial.level}</TutorialLevel>
+                <TutorialMetaItem>{tutorial.duration}</TutorialMetaItem>
+              </TutorialMeta>
             </TutorialCard>
           ))}
         </TutorialsGrid>

@@ -233,11 +233,11 @@ const FavoritesPage: React.FC = () => {
             </p>
             <Button
               variant="primary"
-              style={{ marginTop: '1.5rem' }}
+              $marginTop="1.5rem"
               to="/idea-generator"
               as={Link}
             >
-              Go to Idea Generator
+              Generate New Ideas
             </Button>
           </EmptyState>
         )}
