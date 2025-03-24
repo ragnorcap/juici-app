@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { FiServer, FiAlertCircle, FiCheck, FiRefreshCw } from 'react-icons/fi';
 import { checkServerConnection } from '../api/health';
 

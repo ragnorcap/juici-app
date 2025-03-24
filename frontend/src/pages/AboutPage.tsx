@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { Link } from 'react-router-dom';
 import { FiBriefcase, FiTrendingUp, FiUsers, FiCpu } from 'react-icons/fi';
 import Layout from '../components/Layout';
@@ -16,21 +17,6 @@ const HeroSection = styled.section`
   margin-bottom: 4rem;
 `;
 
-const Title = styled.h1`
-  font-size: 2.8rem;
-  margin-bottom: 1.5rem;
-  
-  span {
-    background: linear-gradient(135deg, #ADFF2F, #90EE90);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  @media (max-width: 768px) {
-    font-size: 2.2rem;
-  }
-`;
 
 const Subtitle = styled.p`
   font-size: 1.2rem;
@@ -148,7 +134,7 @@ const AboutPage: React.FC = () => {
     <Layout>
       <PageContainer>
         <HeroSection>
-          <Title>About <span>Juici</span></Title>
+          <PageTitle>About <span>Juici</span></PageTitle>
           <Subtitle>
             We believe creativity shouldn't be limited by inspiration blocks. Our mission is to provide
             a simple tool that helps spark innovative ideas for projects of all types.

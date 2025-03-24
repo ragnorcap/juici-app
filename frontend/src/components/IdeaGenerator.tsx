@@ -21,15 +21,6 @@ const GeneratorContainer = styled.div`
   max-width: 900px;
 `;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: 1rem;
-  
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
-`;
 
 const Subtitle = styled.p`
   font-size: 1.2rem;
@@ -781,7 +772,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
   return (
     <GeneratorContainer>
       <div>
-        <Title>Creative Juices in Seconds</Title>
+        <PageTitle>Creative Juices in Seconds</PageTitle>
         <Subtitle>Get your creative juices flowing with randomly generated project ideas. Click "Generate" for a new idea.</Subtitle>
       </div>
       

@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { Link } from 'react-router-dom';
 import { FiCalendar, FiUser, FiTag, FiArrowRight } from 'react-icons/fi';
 import Layout from '../components/Layout';

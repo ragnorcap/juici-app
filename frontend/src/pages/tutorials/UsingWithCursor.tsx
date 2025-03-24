@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { FiCalendar, FiUser, FiTag, FiChevronLeft } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
@@ -42,12 +43,6 @@ const ArticleHeader = styled.header`
   margin-bottom: 2rem;
 `;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  color: ${props => props.theme.colors.text.primary};
-  margin-bottom: 1rem;
-  line-height: 1.2;
-`;
 
 const MetaInfo = styled.div`
   display: flex;
@@ -98,7 +93,7 @@ const UsingWithCursor: React.FC = () => {
         <HeroImage />
 
         <ArticleHeader>
-          <Title>Using Juici with Cursor IDE</Title>
+          <PageTitle>Using Juici with Cursor IDE</PageTitle>
           <MetaInfo>
             <MetaItem>
               <FiCalendar /> Mar 20, 2025

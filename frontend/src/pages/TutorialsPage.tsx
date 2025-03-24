@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { Link } from 'react-router-dom';
 import { FiBook, FiClipboard, FiStar, FiTool, FiLink, FiFolder, FiCode } from 'react-icons/fi';
 import Layout from '../components/Layout';

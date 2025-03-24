@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import IdeaGenerator from '../components/IdeaGenerator';
 import Layout from '../components/Layout';
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { FiCalendar, FiUser, FiTag, FiChevronLeft } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
@@ -26,15 +27,6 @@ const BackLink = styled(Link)`
   }
 `;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-  color: ${props => props.theme.colors.green.light};
-  
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
-`;
 
 const PostMeta = styled.div`
   display: flex;
@@ -153,7 +145,7 @@ const HowWeBuiltJuici: React.FC = () => {
           <FiChevronLeft /> Back to Blog
         </BackLink>
         
-        <Title>How We Built Juici: Leveraging Claude 3.7 and Cursor</Title>
+        <PageTitle>How We Built Juici: Leveraging Claude 3.7 and Cursor</PageTitle>
         
         <PostMeta>
           <MetaItem>
@@ -326,6 +318,7 @@ Claude: I'll create a PRDModal component using styled-components with the featur
 \`\`\`tsx
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import ReactMarkdown from 'react-markdown';
 import { FiX, FiSave, FiDownload } from 'react-icons/fi';
 

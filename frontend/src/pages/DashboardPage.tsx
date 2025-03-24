@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { FiList, FiActivity, FiBarChart2, FiCheckSquare, FiClipboard, FiPackage, FiStar, FiPlusCircle, FiClock, FiSettings, FiRefreshCw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -19,6 +20,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { PageTitle, Container, Button } from '../styles/shared';
 
 // Register Chart.js components
 ChartJS.register(
@@ -172,68 +174,40 @@ const Header = styled.div`
   margin-bottom: 2rem;
 `;
 
-const Title = styled.h1`
-  font-size: 2rem;
-  color: #111;
-`;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 `;
 
-const StatCard = styled.div`
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const StatTitle = styled.h3`
-  font-size: 1rem;
-  color: #666;
-  margin-bottom: 0.5rem;
+const StatCard = styled(Card)`
+  text-align: center;
 `;
 
 const StatValue = styled.div`
   font-size: 2rem;
-  font-weight: 600;
-  color: #111;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 0.5rem;
+`;
+
+const StatLabel = styled.div`
+  color: #666;
+  font-size: 0.9rem;
 `;
 
 const HistoryList = styled.div`
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 `;
 
-const HistoryCard = styled.div<{ $isFavorite: boolean }>`
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid ${props => props.$isFavorite ? '#ffd700' : '#0070f3'};
-`;
-
-const HistoryHeader = styled.div`
+const HistoryItem = styled(Card)`
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-`;
-
-const HistoryTitle = styled.h3`
-  font-size: 1.2rem;
-  color: #111;
-  margin: 0;
-`;
-
-const HistoryMeta = styled.div`
-  display: flex;
-  gap: 1rem;
-  font-size: 0.8rem;
-  color: #666;
+  align-items: center;
 `;
 
 const PreferencesSection = styled.div`
@@ -657,81 +631,74 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Layout>
-      <DashboardContainer>
-        <Header>
-          <Title>Dashboard</Title>
-        </Header>
+      <Container>
+        <PageTitle>Dashboard</PageTitle>
+        <DashboardContainer>
+          <Header>
+            <PageTitle>Dashboard</PageTitle>
+          </Header>
 
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+          {error && <ErrorMessage>{error}</ErrorMessage>}
 
-        <StatsGrid>
-          <StatCard>
-            <StatTitle>Total Ideas Generated</StatTitle>
-            <StatValue>{ideaHistory.length}</StatValue>
-          </StatCard>
-          <StatCard>
-            <StatTitle>Favorite Ideas</StatTitle>
-            <StatValue>{favorites.length}</StatValue>
-          </StatCard>
-          <StatCard>
-            <StatTitle>Last Activity</StatTitle>
-            <StatValue>Mar 20, 2025</StatValue>
-          </StatCard>
-        </StatsGrid>
+          <StatsGrid>
+            <StatCard>
+              <StatValue>{getTotalProjects()}</StatValue>
+              <StatLabel>Total Projects</StatLabel>
+            </StatCard>
+            <StatCard>
+              <StatValue>{getTotalIdeas()}</StatValue>
+              <StatLabel>Total Ideas</StatLabel>
+            </StatCard>
+            <StatCard>
+              <StatValue>{getTotalFavorites()}</StatValue>
+              <StatLabel>Favorite Ideas</StatLabel>
+            </StatCard>
+          </StatsGrid>
 
-        <PreferencesSection>
-          <h2>Preferences</h2>
-          <PreferencesForm>
-            <FormGroup>
-              <Label htmlFor="theme">Dark Theme</Label>
-              <Toggle
-                type="checkbox"
-                id="theme"
-                name="theme"
-                checked={preferences.theme === 'dark'}
-                onChange={(e) => handlePreferencesUpdate({
-                  ...e,
-                  target: {
-                    ...e.target,
-                    name: 'theme',
-                    value: e.target.checked ? 'dark' : 'light',
-                  },
-                } as any)}
-              />
-            </FormGroup>
-            <FormGroup>
-              <Label htmlFor="notifications">Notifications</Label>
-              <Toggle
-                type="checkbox"
-                id="notifications"
-                name="notification_enabled"
-                checked={preferences.notification_enabled}
-                onChange={handlePreferencesUpdate}
-              />
-            </FormGroup>
-          </PreferencesForm>
-        </PreferencesSection>
+          <PreferencesSection>
+            <h2>Preferences</h2>
+            <PreferencesForm>
+              <FormGroup>
+                <Label htmlFor="theme">Dark Theme</Label>
+                <Toggle
+                  type="checkbox"
+                  id="theme"
+                  name="theme"
+                  checked={preferences.theme === 'dark'}
+                  onChange={(e) => handlePreferencesUpdate({
+                    ...e,
+                    target: {
+                      ...e.target,
+                      name: 'theme',
+                      value: e.target.checked ? 'dark' : 'light',
+                    },
+                  } as any)}
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label htmlFor="notifications">Notifications</Label>
+                <Toggle
+                  type="checkbox"
+                  id="notifications"
+                  name="notification_enabled"
+                  checked={preferences.notification_enabled}
+                  onChange={handlePreferencesUpdate}
+                />
+              </FormGroup>
+            </PreferencesForm>
+          </PreferencesSection>
 
-        <h2>Recent Activity</h2>
-        <HistoryList>
-          {ideaHistory.map((item) => (
-            <HistoryCard key={item.id} $isFavorite={item.favorite}>
-              <HistoryHeader>
-                <HistoryTitle>{item.idea_text}</HistoryTitle>
+          <h2>Recent Activity</h2>
+          <HistoryList>
+            {ideaHistory.map((item) => (
+              <HistoryItem key={item.id}>
+                <span>{item.idea_text}</span>
                 {item.favorite && <FiStar style={{ color: '#ffd700' }} />}
-              </HistoryHeader>
-              <HistoryMeta>
-                <span>
-                  <FiClock /> Mar 20, 2025
-                </span>
-                {item.tags.map((tag) => (
-                  <span key={tag}>#{tag}</span>
-                ))}
-              </HistoryMeta>
-            </HistoryCard>
-          ))}
-        </HistoryList>
-      </DashboardContainer>
+              </HistoryItem>
+            ))}
+          </HistoryList>
+        </DashboardContainer>
+      </Container>
     </Layout>
   );
 };

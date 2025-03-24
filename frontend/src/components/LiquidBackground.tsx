@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 
 // Create SVG blobs with the juice theme colors
 const BlobContainer = styled(motion.div)`

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { FiPlus, FiCheck, FiLoader, FiTrash2, FiEdit2, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import Button from './Button';
+import { PageTitle, Container, Card } from '../styles/shared';
 
 interface Task {
   id: string;
@@ -31,14 +33,17 @@ const Header = styled.div`
   margin-bottom: 2rem;
 `;
 
-const Title = styled.h1`
-  font-size: 2rem;
-  color: #111;
+const TaskList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
 `;
 
-const TaskList = styled.div`
-  display: grid;
-  gap: 1rem;
+const TaskItem = styled(Card)`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 const TaskCard = styled.div<{ $status: string }>`
@@ -110,67 +115,22 @@ const TaskStatus = styled.span<{ $status: string }>`
 `;
 
 const TaskForm = styled.form`
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 1rem;
   margin-bottom: 2rem;
 `;
 
-const FormGroup = styled.div`
-  margin-bottom: 1rem;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #111;
-  font-weight: 500;
-`;
-
 const Input = styled.input`
-  width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
-
-  &:focus {
-    outline: none;
-    border-color: #0070f3;
-    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-  }
-`;
-
-const TextArea = styled.textarea`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  min-height: 100px;
-  resize: vertical;
-
-  &:focus {
-    outline: none;
-    border-color: #0070f3;
-    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-  }
+  flex: 1;
 `;
 
 const Select = styled.select`
-  width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
-  background: white;
-
-  &:focus {
-    outline: none;
-    border-color: #0070f3;
-    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-  }
 `;
 
 const ErrorMessage = styled.div`
@@ -291,19 +251,20 @@ const Planner: React.FC = () => {
 
   if (isLoading) {
     return (
-      <PlannerContainer>
+      <Container>
+        <PageTitle>Task Planner</PageTitle>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
           <FiLoader />
           <p>Loading tasks...</p>
         </div>
-      </PlannerContainer>
+      </Container>
     );
   }
 
   return (
-    <PlannerContainer>
+    <Container>
+      <PageTitle>Task Planner</PageTitle>
       <Header>
-        <Title>Project Planner</Title>
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? <FiChevronUp /> : <FiPlus />}
           {showForm ? 'Close Form' : 'Add Task'}
@@ -314,60 +275,45 @@ const Planner: React.FC = () => {
 
       {showForm && (
         <TaskForm onSubmit={handleSubmit}>
-          <FormGroup>
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
-          </FormGroup>
+          <Input
+            id="title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            required
+          />
 
-          <FormGroup>
-            <Label htmlFor="description">Description</Label>
-            <TextArea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </FormGroup>
+          <Input
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
 
-          <FormGroup>
-            <Label htmlFor="status">Status</Label>
-            <Select
-              id="status"
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as Task['status'] })}
-            >
-              <option value="todo">To Do</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-            </Select>
-          </FormGroup>
+          <Select
+            id="status"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as Task['status'] })}
+          >
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </Select>
 
-          <FormGroup>
-            <Label htmlFor="priority">Priority</Label>
-            <Select
-              id="priority"
-              value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </Select>
-          </FormGroup>
+          <Select
+            id="priority"
+            value={formData.priority}
+            onChange={(e) => setFormData({ ...formData, priority: e.target.value as Task['priority'] })}
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </Select>
 
-          <FormGroup>
-            <Label htmlFor="due_date">Due Date</Label>
-            <Input
-              id="due_date"
-              type="date"
-              value={formData.due_date}
-              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-            />
-          </FormGroup>
+          <Input
+            id="due_date"
+            type="date"
+            value={formData.due_date}
+            onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+          />
 
           <Button type="submit">
             {editingTask ? 'Update Task' : 'Create Task'}
@@ -400,7 +346,7 @@ const Planner: React.FC = () => {
           </TaskCard>
         ))}
       </TaskList>
-    </PlannerContainer>
+    </Container>
   );
 };
 

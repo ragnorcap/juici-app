@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { FiZap } from 'react-icons/fi';
 import IdeaGenerator from '../components/IdeaGenerator';
 import PRDModal from '../components/PRDModal';

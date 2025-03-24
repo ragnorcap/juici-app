@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import Header from './Header';
 import Footer from './Footer';
 import LiquidBackground from './LiquidBackground';

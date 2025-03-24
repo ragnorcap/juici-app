@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { FiCopy, FiDownload, FiRefreshCw, FiSend, FiLoader, FiCheck, FiFileText, FiTool, FiServer, FiCalendar, FiLayout, FiX, FiStar } from 'react-icons/fi';
 import Button from './Button';
 import { useIdea } from '../contexts/IdeaContext';

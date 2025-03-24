@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../styles/shared';
 import { Link } from 'react-router-dom';
 import { FiTrash2, FiCopy, FiInfo } from 'react-icons/fi';
 import Layout from '../components/Layout';
@@ -12,15 +13,6 @@ const PageContainer = styled.div`
   padding: 2rem 0;
 `;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: 1rem;
-  
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
-`;
 
 const Subtitle = styled.p`
   font-size: 1.2rem;
@@ -178,7 +170,7 @@ const FavoritesPage: React.FC = () => {
   return (
     <Layout>
       <PageContainer>
-        <Title>Your Favorite Ideas</Title>
+        <PageTitle>Your Favorite Ideas</PageTitle>
         <Subtitle>
           All your saved inspirations in one place. Revisit and explore whenever you need a creative boost.
         </Subtitle>
