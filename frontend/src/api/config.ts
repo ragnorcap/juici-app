@@ -44,7 +44,8 @@ export const getSecurityHeaders = () => {
     // Add API key for backend authentication
     'X-Api-Key': API_KEY,
     // Add random request ID to help with debugging and prevent caching
-    'X-Request-ID': generateRequestId()
+    'X-Request-ID': generateRequestId(),
+    'X-Requested-With': 'XMLHttpRequest',
   };
 
   return headers;
@@ -89,6 +90,9 @@ export const handleApiError = (error: any): { message: string } => {
     } else {
       message = `Request failed with status: ${error.response.status}`;
     }
+    console.error('Error response:', error.response.data);
+    console.error('Error status:', error.response.status);
+    console.error('Error headers:', error.response.headers);
   } else if (error.request) {
     // Request was made but no response received
     if (error.message === 'Network Error') {
@@ -96,6 +100,7 @@ export const handleApiError = (error: any): { message: string } => {
     } else {
       message = 'No response received from server. The server may be down or unreachable.';
     }
+    console.error('Error request:', error.request);
   } else if (error.code === 'ECONNABORTED') {
     message = 'Request timed out. Please check your network connection.';
   }
@@ -109,4 +114,42 @@ export const handleApiError = (error: any): { message: string } => {
   });
   
   return { message };
+};
+
+// API Configuration
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5555';
+
+// Request Configuration
+export const REQUEST_TIMEOUT = 30000; // 30 seconds
+
+// Security Headers
+export const getSecurityHeaders = () => ({
+  'Content-Type': 'application/json',
+  'X-Requested-With': 'XMLHttpRequest',
+});
+
+// Error Handling
+export const handleApiError = (error: any) => {
+  if (error.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    console.error('Error response:', error.response.data);
+    console.error('Error status:', error.response.status);
+    console.error('Error headers:', error.response.headers);
+    throw new Error(error.response.data.message || 'An error occurred');
+  } else if (error.request) {
+    // The request was made but no response was received
+    console.error('Error request:', error.request);
+    throw new Error('No response received from server');
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    console.error('Error message:', error.message);
+    throw error;
+  }
+};
+
+// Data Obfuscation
+export const obfuscateData = (data: any) => {
+  // Implement data obfuscation logic here if needed
+  return data;
 }; 
