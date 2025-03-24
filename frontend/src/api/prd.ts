@@ -34,7 +34,7 @@ export const generatePRD = async (idea: string) => {
     
     // Make the request with security headers and extended timeout (PRD generation takes longer)
     const response = await axios.post(
-      `${API_BASE_URL}/api/generate-prd`, 
+      `${API_BASE_URL}/api/prd/generate`, 
       { idea: idea.trim() },
       {
         headers: getSecurityHeaders(),
@@ -50,7 +50,7 @@ export const generatePRD = async (idea: string) => {
       data: response.data.prd,
       error: null
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error generating PRD:', error);
     return {
       data: null,

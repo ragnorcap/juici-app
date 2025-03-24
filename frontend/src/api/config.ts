@@ -34,9 +34,8 @@ export default api;
 // Maximum request timeout (ms)
 export const REQUEST_TIMEOUT = 30000;
 
-// API key for authentication - this should match the one in your backend .env file
-// In production, this would be set via environment variables
-const API_KEY = 'juici_prod_983467a1b2c3d4e5f6g7h8i9j0';
+// API key for authentication - from environment variables
+const API_KEY = process.env.REACT_APP_API_KEY || 'juici_dev_key';
 
 // Security headers for all requests
 export const getSecurityHeaders = () => {
