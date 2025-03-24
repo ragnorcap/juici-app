@@ -1,7 +1,6 @@
 {
   "version": 2,
   "buildCommand": "cd frontend && npm install && npm run build:vercel",
-  "installCommand": "npm install && cd backend && npm install",
   "outputDirectory": "frontend/build",
   "routes": [
     { 
@@ -15,9 +14,9 @@
       },
       "continue": true
     },
-    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/api/(.*)", "dest": "/backend/dist/index.js" },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "/frontend/build/index.html" }
   ],
   "env": {
     "NODE_ENV": "production"
