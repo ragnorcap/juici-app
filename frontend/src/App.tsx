@@ -16,7 +16,7 @@ import AppPage from './pages/AppPage';
 // Blog and Tutorial Content Pages
 import HowWeBuiltJuici from './pages/blog/HowWeBuiltJuici';
 import AIInProductDevelopment from './pages/blog/AIInProductDevelopment';
-import UsingWithCursor from './pages/blog/UsingWithCursor';
+import UsingWithCursor from './pages/tutorials/UsingWithCursor';
 import BestPracticesSoftwareProjects from './pages/blog/BestPracticesSoftwareProjects';
 import GettingStarted from './pages/tutorials/GettingStarted';
 import CreatingPRDs from './pages/tutorials/CreatingPRDs';
@@ -42,11 +42,11 @@ const App = () => {
         <Route path="/tutorials/advanced-techniques" element={<AdvancedTechniques />} />
         <Route path="/tutorials/api-integration" element={<APIIntegration />} />
         <Route path="/tutorials/organizing-favorites" element={<OrganizingFavorites />} />
+        <Route path="/tutorials/using-with-cursor" element={<UsingWithCursor />} />
         
         {/* Blog routes */}
         <Route path="/blog/how-we-built-juici" element={<HowWeBuiltJuici />} />
         <Route path="/blog/ai-in-product-development" element={<AIInProductDevelopment />} />
-        <Route path="/blog/using-with-cursor" element={<UsingWithCursor />} />
         <Route path="/blog/best-practices-software-projects" element={<BestPracticesSoftwareProjects />} />
         
         {/* App route */}

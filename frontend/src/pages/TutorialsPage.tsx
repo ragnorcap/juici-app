@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { FiBook, FiClipboard, FiStar, FiTool, FiLink, FiFolder } from 'react-icons/fi';
+import { FiBook, FiClipboard, FiStar, FiTool, FiLink, FiFolder, FiCode } from 'react-icons/fi';
 import Layout from '../components/Layout';
 
 // Tutorial data
@@ -55,6 +55,16 @@ const tutorials = [
     level: 'Intermediate',
     duration: '8 min',
     category: 'Organization'
+  },
+  {
+    id: 6,
+    title: 'Using Juici with Cursor IDE',
+    description: 'Learn how to integrate Juici with Cursor IDE for a seamless development experience.',
+    path: '/tutorials/using-with-cursor',
+    icon: <FiCode />,
+    level: 'Intermediate',
+    duration: '12 min',
+    category: 'Integration'
   }
 ];
 
@@ -254,6 +264,7 @@ const TutorialsPage: React.FC = () => {
               {category === 'Advanced' && <FiTool />}
               {category === 'Development' && <FiLink />}
               {category === 'Organization' && <FiStar />}
+              {category === 'Integration' && <FiCode />}
               {category}
             </CategoryButton>
           ))}
