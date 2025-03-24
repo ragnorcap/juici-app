@@ -11,7 +11,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://juici-backend-59dba9d02624.herokuapp.com https:; object-src 'none'; media-src 'self' https:; frame-src 'self' https:; upgrade-insecure-requests;"
+          "value": "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://juici-backend-59dba9d02624.herokuapp.com https://www.juici.space https://juici.space; object-src 'none'; media-src 'self' https:; frame-src 'self' https:; upgrade-insecure-requests;"
         },
         {
           "key": "Strict-Transport-Security",
