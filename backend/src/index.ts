@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase, getFavorites, addFavorite, removeFavorite } from './lib/supabase';
 import { isDbConnected } from './lib/db';
 import { OpenAI } from 'openai';
-import { Request, Response, NextFunction } from 'express';
 
 // Load environment variables
 dotenv.config();
@@ -36,25 +35,41 @@ app.use(helmet()); // Set security headers
 // Configure CORS
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://juici-i5xkdt0f2-animas-projects-01c16ea7.vercel.app',
-  'https://juici-app.vercel.app'
+  'https://www.juici.space',
+  'https://juici.space',
+  'https://juici-i4lge2juy-animas-projects-01c16ea7.vercel.app'
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin) {
+      callback(null, true);
+      return;
     }
-    return callback(null, true);
+
+    // Check if the origin matches any of our allowed domains
+    const isAllowed = allowedOrigins.some(allowed => {
+      // For www.juici.space, allow any path
+      if (allowed === 'https://www.juici.space') {
+        return origin.startsWith(allowed);
+      }
+      return origin === allowed;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
   },
-  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Api-Key', 'X-Request-ID']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '50kb' })); // Limit payload size to prevent DOS
 
 // Rate limiting
 const apiLimiter = rateLimit({
@@ -95,10 +110,8 @@ const verifyApiKey = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-// Add API key validation
+// Apply API key verification to all routes except health check
 app.use(verifyApiKey);
-
-app.use(express.json({ limit: '50kb' })); // Limit payload size to prevent DOS
 
 // Request logging with unique ID
 app.use((req: Request, res: Response, next: NextFunction) => {

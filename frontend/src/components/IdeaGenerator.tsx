@@ -547,7 +547,11 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
     const fetchPrompts = async () => {
       try {
         console.log("Fetching prompts from API...");
-        const response = await fetch('/api/prompts');
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/prompts`, {
+          headers: {
+            'X-Api-Key': process.env.REACT_APP_API_KEY || 'juici_dev_key'
+          }
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch prompts');
         }
