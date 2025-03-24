@@ -3,8 +3,32 @@
  * Contains centralized configuration for all API calls and security measures
  */
 
-// Base URL for API requests - use environment variable when available
-export const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+// API configuration
+import axios from 'axios';
+
+// Set up API configuration
+const API_URL = process.env.REACT_APP_API_URL || 
+  // For production, use relative path which will respect the protocol (http/https)
+  (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5555/api');
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response || error);
+    return Promise.reject(error);
+  }
+);
+
+export default api;
 
 // Maximum request timeout (ms)
 export const REQUEST_TIMEOUT = 30000;
@@ -20,9 +44,7 @@ export const getSecurityHeaders = () => {
     // Add API key for backend authentication
     'X-Api-Key': API_KEY,
     // Add random request ID to help with debugging and prevent caching
-    'X-Request-ID': generateRequestId(),
-    // Explicitly add CORS headers
-    'Access-Control-Request-Headers': 'Content-Type, X-Api-Key, X-Request-ID'
+    'X-Request-ID': generateRequestId()
   };
 
   return headers;
