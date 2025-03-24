@@ -7,13 +7,14 @@
 import axios from 'axios';
 
 // Set up API configuration
-const API_URL = process.env.REACT_APP_API_URL || 
-  // For production, use relative path which will respect the protocol (http/https)
-  (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5555/api');
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://juici-backend-59dba9d02624.herokuapp.com'
+    : 'http://localhost:5555');
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -109,12 +110,9 @@ export const handleApiError = (error: any): { message: string } => {
   console.error('API Error Details:', {
     message,
     status: error.response?.status,
-    url: obfuscateData(error.config?.url),
-    headers: obfuscateData(error.config?.headers)
+    url: error.config?.url,
+    headers: error.config?.headers
   });
   
   return { message };
-};
-
-// API Base URL for direct use
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5555'; 
+}; 

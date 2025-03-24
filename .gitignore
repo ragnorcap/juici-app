@@ -79,4 +79,7 @@ Thumbs.db
 .cursor
 
 # Nested directory
-/ideagen/ 
+/ideagen/
+
+# Backup directory
+/Users/acetwotimes/working-juici .env*

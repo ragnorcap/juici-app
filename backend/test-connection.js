@@ -1,59 +1,82 @@
 // Test Supabase Connection Script
-const { Pool } = require('pg');
-require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+const path = require('path');
+const fs = require('fs');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 async function testConnection() {
   console.log('Testing Supabase database connection...');
-  console.log('Database URL exists:', !!process.env.DATABASE_URL);
+  console.log('Looking for .env file in:', path.join(__dirname, '.env'));
+  console.log('.env file exists:', fs.existsSync(path.join(__dirname, '.env')));
   
-  // Extract and mask credentials for logging
-  const url = new URL(process.env.DATABASE_URL);
-  const maskedUrl = `${url.protocol}//${url.username}:****@${url.host}${url.pathname}`;
-  console.log(`Using connection: ${maskedUrl}`);
+  // Check for Supabase credentials
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SECRET) {
+    console.error('❌ Missing Supabase credentials:');
+    console.error('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+    console.error('SUPABASE_SECRET exists:', !!process.env.SUPABASE_SECRET);
+    return false;
+  }
   
-  // Create a database pool with detailed settings
-  const db = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }, // Disable SSL cert verification for testing
-    connectionTimeoutMillis: 15000, // 15 seconds timeout
-  });
+  console.log('Supabase URL:', process.env.SUPABASE_URL);
+  console.log('Supabase secret exists:', !!process.env.SUPABASE_SECRET);
   
   try {
-    // Test connection with a simple query
-    console.log('Attempting to connect...');
-    const result = await db.query('SELECT NOW() as current_time');
-    
-    console.log('✅ Connection successful!');
-    console.log(`Server time: ${result.rows[0].current_time}`);
-    
-    // Check if the favorites table exists
-    console.log('Checking for favorites table...');
-    const tableCheck = await db.query(
-      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'favorites')"
+    // Initialize Supabase client
+    console.log('Initializing Supabase client...');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SECRET
     );
     
-    if (tableCheck.rows[0].exists) {
+    console.log('Attempting to connect...');
+    
+    // Test with a simple query to check the favorites table
+    const { data: tableInfo, error: tableError } = await supabase
+      .from('favorites')
+      .select('id', { count: 'exact', head: true });
+      
+    if (tableError) {
+      if (tableError.code === 'PGRST116') {
+        // This error means the table exists but has no rows
+        console.log('✅ Connection successful!');
+        console.log('✅ Favorites table exists (but is empty)');
+      } else {
+        throw tableError;
+      }
+    } else {
+      console.log('✅ Connection successful!');
       console.log('✅ Favorites table exists');
       
       // Count rows in favorites table
-      const countResult = await db.query('SELECT COUNT(*) FROM favorites');
-      console.log(`Found ${countResult.rows[0].count} rows in favorites table`);
-    } else {
-      console.log('⚠️ Favorites table does not exist');
+      const { count, error: countError } = await supabase
+        .from('favorites')
+        .select('*', { count: 'exact', head: true });
+        
+      if (countError) {
+        console.error('Error counting rows:', countError.message);
+      } else {
+        console.log(`Found ${count} rows in favorites table`);
+      }
       
-      // Attempt to create the table
-      console.log('Creating favorites table...');
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS favorites (
-          id SERIAL PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          prompt TEXT NOT NULL,
-          categories JSONB,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE INDEX IF NOT EXISTS favorites_user_id_idx ON favorites (user_id);
-      `);
-      console.log('✅ Favorites table created successfully');
+      // Test querying data (skip record insertion due to foreign key constraints)
+      console.log('Testing data retrieval...');
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('*')
+        .limit(1);
+        
+      if (error) {
+        console.error('❌ Failed to retrieve data:', error.message);
+      } else if (data && data.length > 0) {
+        console.log('✅ Successfully retrieved data sample:');
+        console.log('  - ID:', data[0].id);
+        console.log('  - User ID:', data[0].user_id);
+        console.log('  - Prompt:', data[0].prompt);
+        console.log('  - Categories:', data[0].categories);
+        console.log('  - Created at:', data[0].created_at);
+      } else {
+        console.log('✅ Table exists but contains no data');
+      }
     }
     
     return true;
@@ -61,19 +84,11 @@ async function testConnection() {
     console.error('❌ Connection failed:');
     console.error(error.message);
     
-    // Show more detailed error information
-    if (error.code) {
-      console.error(`Error code: ${error.code}`);
-    }
     if (error.stack) {
       console.error('Stack trace:', error.stack);
     }
     
     return false;
-  } finally {
-    // Close the connection pool
-    await db.end();
-    console.log('Connection pool closed');
   }
 }
 
@@ -81,10 +96,10 @@ async function testConnection() {
 testConnection()
   .then(success => {
     if (success) {
-      console.log('✅ Database connection test completed successfully');
+      console.log('✅ Supabase connection test completed successfully');
       process.exit(0);
     } else {
-      console.log('❌ Database connection test failed');
+      console.log('❌ Supabase connection test failed');
       process.exit(1);
     }
   })

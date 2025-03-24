@@ -8,7 +8,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase, getFavorites, addFavorite, removeFavorite } from './lib/supabase';
-import { db, query, isDbConnected } from './lib/db';
+import { isDbConnected } from './lib/db';
 import { OpenAI } from 'openai';
 import { Request, Response, NextFunction } from 'express';
 
@@ -33,50 +33,28 @@ if (!process.env.API_KEY) {
 // Security middleware
 app.use(helmet()); // Set security headers
 
-// CORS configuration - more explicit handling
-const corsOptions = {
-  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    // Allow all origins if ALLOWED_ORIGINS is set to *
-    if (process.env.ALLOWED_ORIGINS === '*') {
-      console.log(`✅ CORS: Allowing all origins (wildcard)`);
-      callback(null, true);
-      return;
-    }
+// Configure CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://juici-i5xkdt0f2-animas-projects-01c16ea7.vercel.app',
+  'https://juici-app.vercel.app'
+];
 
-    // List of allowed origins
-    const allowedOrigins = [
-      'http://localhost:3000', 
-      'http://localhost:5555', 
-      'http://127.0.0.1:3000',
-      ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-    ];
-
+app.use(cors({
+  origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      console.log(`✅ CORS: Allowing request from origin: ${origin || 'No origin'}`);
-      callback(null, true);
-    } else {
-      console.warn(`❌ CORS: Blocked request from origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
     }
+    return callback(null, true);
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Api-Key', 
-    'X-Request-ID',
-    'Access-Control-Request-Headers'
-  ],
-  exposedHeaders: ['X-Request-ID'], 
   credentials: true,
-  maxAge: 86400, // Cache preflight requests for 24 hours
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
-
-// Apply CORS before other middleware
-app.use(cors(corsOptions));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Api-Key', 'X-Request-ID']
+}));
 
 // Rate limiting
 const apiLimiter = rateLimit({
@@ -173,6 +151,19 @@ app.get('/api/random-prompt', (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching random prompt:', error);
     // Generic error message to avoid information leakage
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// API Route to get all prompts
+app.get('/api/prompts', (req: Request, res: Response) => {
+  try {
+    res.json({ 
+      prompts: prompts,
+      total: prompts.length
+    });
+  } catch (error) {
+    console.error('Error fetching all prompts:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -311,25 +302,14 @@ app.post('/api/favorites', validateFavoriteBody, async (req: Request, res: Respo
   try {
     const { userId, prompt, categories } = req.body;
 
-    let result;
-    // Store in database if connected, otherwise use in-memory
-    if (isDbConnected) {
-      result = await query(
-        'INSERT INTO favorites (user_id, prompt, categories) VALUES ($1, $2, $3) RETURNING *',
-        [userId, prompt, JSON.stringify(categories)]
-      );
-      console.log('✅ Saved favorite to database');
-    } else {
-      // In-memory fallback (handled by db.ts)
-      result = await query(
-        'INSERT INTO favorites (user_id, prompt, categories) VALUES ($1, $2, $3) RETURNING *',
-        [userId, prompt, JSON.stringify(categories)]
-      );
-      console.log('⚠️ Saved favorite to in-memory storage');
+    const { data, error } = await addFavorite(userId, prompt, categories);
+    
+    if (error) {
+      throw error;
     }
     
-    if (result && result.rows) {
-      res.status(201).json(result.rows[0]);
+    if (data && data.length > 0) {
+      res.status(201).json(data[0]);
     } else {
       throw new Error('Failed to save favorite');
     }
@@ -345,24 +325,13 @@ app.get('/api/favorites', validateUserIdParam, async (req: Request, res: Respons
   try {
     const userId = req.query.userId as string;
     
-    // Retrieve from database or in-memory
-    const result = await query(
-      'SELECT * FROM favorites WHERE user_id = $1 ORDER BY created_at DESC',
-      [userId]
-    );
+    const { data, error } = await getFavorites(userId);
     
-    if (result && result.rows) {
-      // Ensure categories is always an array
-      const processedRows = result.rows.map(row => ({
-        ...row,
-        categories: Array.isArray(row.categories) ? row.categories : []
-      }));
-      
-      console.log(`Retrieved ${processedRows.length} favorites for user ${userId}`);
-      res.json(processedRows);
-    } else {
-      throw new Error('Failed to retrieve favorites');
+    if (error) {
+      throw error;
     }
+    
+    res.json(data);
   } catch (error) {
     console.error('Error loading favorites:', error);
     // Generic error message to avoid information leakage
@@ -386,12 +355,14 @@ const validateFavoriteId = (req: Request, res: Response, next: NextFunction) => 
 app.delete('/api/favorites/:id', validateFavoriteId, async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
+    // Get user ID from query param or default to a UUID validation check
+    const userId = req.query.userId as string || '00000000-0000-0000-0000-000000000000';
     
-    // Delete from database or in-memory
-    await query(
-      'DELETE FROM favorites WHERE id = $1',
-      [id]
-    );
+    const { error } = await removeFavorite(parseInt(id), userId);
+    
+    if (error) {
+      throw error;
+    }
     
     console.log(`Deleted favorite with ID ${id}`);
     res.json({ success: true });
@@ -404,6 +375,20 @@ app.delete('/api/favorites/:id', validateFavoriteId, async (req: Request, res: R
 
 // Health check route (does not expose sensitive information)
 app.get('/health', (req: Request, res: Response) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Juici API is running',
+    // Don't expose detailed information in production
+    ...(process.env.NODE_ENV !== 'production' && {
+      database: isDbConnected ? 'connected' : 'using in-memory fallback',
+      openai: process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here' ? 'configured' : 'not configured',
+      prompts: prompts.length
+    })
+  });
+});
+
+// Add an identical route under /api/health for frontend compatibility
+app.get('/api/health', (req: Request, res: Response) => {
   res.json({ 
     status: 'ok', 
     message: 'Juici API is running',
