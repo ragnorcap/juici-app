@@ -1,8 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:frontend",
-  "outputDirectory": "frontend/build",
-  "framework": "create-react-app",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node",
+      "config": {
+        "buildCommand": "npm run install:all && npm run build",
+        "outputDirectory": "frontend/build"
+      }
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
