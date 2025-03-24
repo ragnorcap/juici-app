@@ -30,48 +30,27 @@ if (!process.env.API_KEY) {
 }
 // Security middleware
 app.use((0, helmet_1.default)()); // Set security headers
-// CORS configuration - more explicit handling
-const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow all origins if ALLOWED_ORIGINS is set to *
-        if (process.env.ALLOWED_ORIGINS === '*') {
-            console.log(`✅ CORS: Allowing all origins (wildcard)`);
-            callback(null, true);
-            return;
-        }
-        // List of allowed origins
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:5555',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:5555',
-            ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-        ];
+// Configure CORS
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://juici-i5xkdt0f2-animas-projects-01c16ea7.vercel.app',
+    'https://juici-app.vercel.app'
+];
+app.use((0, cors_1.default)({
+    origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            console.log(`✅ CORS: Allowing request from origin: ${origin || 'No origin'}`);
-            callback(null, true);
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
         }
-        else {
-            console.warn(`❌ CORS: Blocked request from origin: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
-        }
+        return callback(null, true);
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'X-Api-Key',
-        'X-Request-ID'
-    ],
-    exposedHeaders: ['X-Request-ID'],
     credentials: true,
-    maxAge: 86400, // Cache preflight requests for 24 hours
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-};
-// Apply CORS before other middleware
-app.use((0, cors_1.default)(corsOptions));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Api-Key', 'X-Request-ID']
+}));
 // Rate limiting
 const apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
