@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiCopy, FiDownload, FiRefreshCw, FiSend, FiLoader, FiCheck, FiFileText, FiTool, FiServer, FiCalendar, FiLayout, FiX } from 'react-icons/fi';
+import { FiCopy, FiDownload, FiRefreshCw, FiSend, FiLoader, FiCheck, FiFileText, FiTool, FiServer, FiCalendar, FiLayout, FiX, FiStar } from 'react-icons/fi';
 import Button from './Button';
 import { useIdea } from '../contexts/IdeaContext';
+import { generatePRD, refinePRD, chatWithJuici, saveFavorite } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useFavorites } from '../contexts/FavoritesContext';
 
 export type DocumentType = 'PRD' | 'AppFlow' | 'TechStack' | 'ImplementationPlan';
 
@@ -28,27 +31,23 @@ const ModalOverlay = styled.div<{ $isOpen: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.5);
   display: ${props => props.$isOpen ? 'flex' : 'none'};
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 20px;
 `;
 
 const ModalContent = styled.div`
-  background-color: #2D0157;
-  border-radius: 12px;
+  background: white;
   padding: 2rem;
+  border-radius: 8px;
   width: 90%;
-  max-width: 1000px;
+  max-width: 1200px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  color: white;
-  border: 2px solid ${props => props.theme.colors.purple.main};
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
 const CloseButton = styled.button`
@@ -57,197 +56,176 @@ const CloseButton = styled.button`
   right: 1rem;
   background: none;
   border: none;
-  color: white;
   font-size: 1.5rem;
   cursor: pointer;
-  z-index: 1;
-  
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+
   &:hover {
-    color: ${props => props.theme.colors.yellow.main};
+    background-color: rgba(0, 0, 0, 0.1);
   }
 `;
 
 const PRDContent = styled.div`
-  color: white;
+  margin: 2rem 0;
   line-height: 1.6;
-  font-family: 'Manrope', sans-serif;
-  
+  font-size: 1rem;
+  color: #333;
+
   h1, h2, h3, h4, h5, h6 {
-    color: ${props => props.theme.colors.green.light};
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #111;
   }
-  
-  h1 {
-    font-size: 2rem;
-    border-bottom: 1px solid ${props => props.theme.colors.purple.light};
-    padding-bottom: 0.5rem;
+
+  p {
+    margin-bottom: 1rem;
   }
-  
-  h2 {
-    font-size: 1.7rem;
-  }
-  
-  h3 {
-    font-size: 1.4rem;
-  }
-  
-  p, ul, ol {
-    margin-bottom: 1.2em;
-  }
-  
+
   ul, ol {
-    padding-left: 2em;
+    margin-bottom: 1rem;
+    padding-left: 2rem;
   }
-  
-  li {
-    margin-bottom: 0.5em;
-  }
-  
+
   code {
-    font-family: monospace;
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
+    background-color: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
   }
-  
+
   pre {
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: 1em;
-    border-radius: 5px;
+    background-color: #f5f5f5;
+    padding: 1rem;
+    border-radius: 4px;
     overflow-x: auto;
-    margin: 1em 0;
-  }
-  
-  blockquote {
-    border-left: 4px solid ${props => props.theme.colors.yellow.main};
-    padding-left: 1em;
-    margin-left: 0;
-    font-style: italic;
-  }
-  
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 1em 0;
-  }
-  
-  th, td {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 0.5em;
-    text-align: left;
-  }
-  
-  th {
-    background-color: rgba(0, 0, 0, 0.2);
+    margin-bottom: 1rem;
   }
 `;
 
 const ActionButtonsContainer = styled.div`
   display: flex;
-  justify-content: center;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
 `;
 
-// Helper function to convert markdown to HTML
-const markdownToHtml = (markdown: string): string => {
-  let html = markdown
-    // Headers
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    // Bold
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    // Code blocks
-    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Lists
-    .replace(/^\s*\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>')
-    .replace(/^\s*\*\s+(.*$)/gim, '<ul><li>$1</li></ul>')
-    // Blockquotes
-    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-    // Line breaks
-    .replace(/\n/g, '<br/>');
-    
-  // Fix consecutive list items
-  html = html
-    .replace(/<\/ol><ol>/g, '')
-    .replace(/<\/ul><ul>/g, '');
-    
-  return html;
-};
+const RefinePRDModal = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
-const RefinePRDModal = styled(ModalContent)`
-  max-width: 600px;
+  h2 {
+    margin-bottom: 1.5rem;
+    color: #111;
+  }
 `;
 
 const RefinePRDInput = styled.textarea`
   width: 100%;
-  min-height: 200px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+  min-height: 150px;
   padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   margin-bottom: 1rem;
-  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.5;
   resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: #0070f3;
+    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+  }
 `;
 
-const RefinementChatContainer = styled(ModalContent)`
-  max-width: 700px;
-  height: 600px;
+const RefinementChatContainer = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  height: 80vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    margin-bottom: 1.5rem;
+    color: #111;
+  }
 `;
 
 const ChatMessagesContainer = styled.div`
-  flex-grow: 1;
+  flex: 1;
   overflow-y: auto;
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
   margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f9f9f9;
 `;
 
-const ChatMessage = styled.div<{ isUser?: boolean }>`
+const ChatMessage = styled.div<{ isUser: boolean }>`
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
   max-width: 80%;
-  margin: 0.5rem 0;
-  padding: 0.75rem;
-  border-radius: 12px;
-  clear: both;
+  word-wrap: break-word;
+  line-height: 1.4;
   
   ${props => props.isUser ? `
-    background: linear-gradient(135deg, #008080, #20B2AA);
+    background-color: #0070f3;
     color: white;
-    align-self: flex-end;
     margin-left: auto;
   ` : `
-    background: rgba(255, 255, 255, 0.1);
-    color: #e0e0e0;
-    align-self: flex-start;
+    background-color: #e9ecef;
+    color: #333;
+    margin-right: auto;
   `}
 `;
 
 const RefinementInputContainer = styled.div`
   display: flex;
   gap: 1rem;
-  align-items: center;
+  margin-top: 1rem;
 `;
 
 const RefinementInput = styled.textarea`
-  flex-grow: 1;
-  min-height: 80px;
+  flex: 1;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  resize: none;
+  min-height: 60px;
   max-height: 150px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+
+  &:focus {
+    outline: none;
+    border-color: #0070f3;
+    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
   padding: 1rem;
-  border-radius: 8px;
-  resize: vertical;
+  border-radius: 4px;
+  margin-top: 1rem;
+  text-align: center;
 `;
 
 // Document checklist styled components
@@ -402,453 +380,210 @@ const PRDModal: React.FC<PRDModalProps> = ({
   isOpen, 
   onClose 
 }) => {
+  const { user } = useAuth();
+  const { addFavorite } = useFavorites();
+  const [currentPRD, setCurrentPRD] = useState(prdContent);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [showRefinementModal, setShowRefinementModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [refinementInput, setRefinementInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<{ isUser: boolean; message: string }[]>([]);
-  const [currentMessage, setCurrentMessage] = useState('');
-  const [isProcessingMessage, setIsProcessingMessage] = useState(false);
-  const [copiedToClipboard, setCopiedToClipboard] = useState(false);
-  
-  // Document generation state
-  const [activeDocType, setActiveDocType] = useState<DocumentType>('PRD');
-  const [documents, setDocuments] = useState<Record<DocumentType, Document>>({
-    PRD: {
-      title: 'Product Requirements Document',
-      content: prdContent,
-      icon: <FiFileText />,
-      isGenerated: true,
-      isGenerating: false
-    },
-    AppFlow: {
-      title: 'Application Flow',
-      content: '',
-      icon: <FiLayout />,
-      isGenerated: false,
-      isGenerating: false
-    },
-    TechStack: {
-      title: 'Tech Stack (Frontend/Backend)',
-      content: '',
-      icon: <FiServer />,
-      isGenerated: false,
-      isGenerating: false
-    },
-    ImplementationPlan: {
-      title: 'Implementation Plan',
-      content: '',
-      icon: <FiCalendar />,
-      isGenerated: false,
-      isGenerating: false
-    }
-  });
-  
-  // Utility function to generate other documents
-  const generateDocument = async (docType: DocumentType) => {
-    if (documents[docType].isGenerated || documents[docType].isGenerating) return;
-    
-    // Set the document as generating
-    setDocuments(prev => ({
-      ...prev,
-      [docType]: {
-        ...prev[docType],
-        isGenerating: true
-      }
-    }));
-    
-    try {
-      // Call the appropriate API endpoint based on document type
-      const apiEndpoint = `/api/generate-${docType.toLowerCase().replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          prd: documents.PRD.content,
-          docType
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to generate ${docType}`);
-      }
-      
-      const data = await response.json();
-      
-      // Update the document content
-      setDocuments(prev => ({
-        ...prev,
-        [docType]: {
-          ...prev[docType],
-          content: data.content,
-          isGenerated: true,
-          isGenerating: false
-        }
-      }));
-      
-      // Set this as the active document
-      setActiveDocType(docType);
-      
-    } catch (error) {
-      console.error(`Error generating ${docType}:`, error);
-      
-      // Update state to reflect the error
-      setDocuments(prev => ({
-        ...prev,
-        [docType]: {
-          ...prev[docType],
-          isGenerating: false
-        }
-      }));
-    }
-  };
-  
-  // Handle document selection
-  const handleSelectDocument = (docType: DocumentType) => {
-    setActiveDocType(docType);
-    
-    // If the document hasn't been generated yet, generate it
-    if (!documents[docType].isGenerated && !documents[docType].isGenerating) {
-      generateDocument(docType);
-    }
-  };
-  
-  // Handle copying the current document
+  const [refinementPrompt, setRefinementPrompt] = useState('');
+  const [chatMessages, setChatMessages] = useState<Array<{ text: string; isUser: boolean }>>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
   const handleCopy = () => {
-    const currentContent = documents[activeDocType].content;
-    navigator.clipboard.writeText(currentContent)
-      .then(() => {
-        setCopiedToClipboard(true);
-        setTimeout(() => setCopiedToClipboard(false), 2000);
-      })
-      .catch(err => console.error('Failed to copy text: ', err));
+    navigator.clipboard.writeText(currentPRD);
   };
 
-  // Handle downloading the current document
   const handleDownload = () => {
-    const currentContent = documents[activeDocType].content;
-    const fileName = `${activeDocType.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.md`;
-    const blob = new Blob([currentContent], { type: 'text/markdown' });
-    const href = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = href;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(href);
+    const blob = new Blob([currentPRD], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'PRD.md';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
-  
-  // Refine the current document
-  const handleRefinePRD = async () => {
+
+  const handleRefinePRD = () => {
     setShowRefinementModal(true);
   };
-  
-  // Submit a refinement request
+
   const submitRefinement = async () => {
-    if (!refinementInput.trim()) return;
+    if (!refinementPrompt.trim()) return;
     
-    setShowRefinementModal(false);
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
+      const response = await refinePRD(currentPRD, refinementPrompt);
+      if (response.success && response.data) {
+        setCurrentPRD(response.data);
+        setShowRefinementModal(false);
+        setRefinementPrompt('');
+      } else {
+        throw new Error(response.error || 'Failed to refine PRD');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleChatWithJuici = () => {
     setShowChatModal(true);
-    
-    // Add user message to chat
     setChatMessages([
-      { isUser: true, message: refinementInput }
+      { 
+        text: "Hi! I'm Juici, your AI assistant. I can help you refine and improve your PRD. What would you like to discuss?",
+        isUser: false 
+      }
     ]);
-    
-    setIsProcessingMessage(true);
-    
-    try {
-      // Call the refinement API
-      const response = await fetch('/api/refine-document', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          docType: activeDocType,
-          content: documents[activeDocType].content,
-          refinementRequest: refinementInput
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to refine document');
-      }
-      
-      const data = await response.json();
-      
-      // Add AI response to chat
-      setChatMessages(prev => [
-        ...prev,
-        { isUser: false, message: data.response }
-      ]);
-      
-      // If refinement includes updated content, update the document
-      if (data.updatedContent) {
-        setDocuments(prev => ({
-          ...prev,
-          [activeDocType]: {
-            ...prev[activeDocType],
-            content: data.updatedContent
-          }
-        }));
-      }
-      
-    } catch (error) {
-      console.error('Error refining document:', error);
-      setChatMessages(prev => [
-        ...prev,
-        { isUser: false, message: 'Sorry, there was an error processing your refinement request. Please try again.' }
-      ]);
-    } finally {
-      setIsProcessingMessage(false);
-      setRefinementInput('');
-    }
   };
-  
-  // Send a message in the chat
+
   const sendChatMessage = async () => {
-    if (!currentMessage.trim() || isProcessingMessage) return;
+    if (!chatInput.trim()) return;
+
+    const userMessage = chatInput;
+    setChatInput('');
+    setChatMessages(prev => [...prev, { text: userMessage, isUser: true }]);
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const response = await chatWithJuici(userMessage, currentPRD);
+      if (response.success && response.data) {
+        setChatMessages(prev => [...prev, { text: response.data, isUser: false }]);
+      } else {
+        throw new Error(response.error || 'Failed to get response from Juici');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSaveToFavorites = async () => {
+    if (!user) return;
     
-    const userMessage = currentMessage;
-    setCurrentMessage('');
-    
-    // Add user message to chat
-    setChatMessages(prev => [
-      ...prev,
-      { isUser: true, message: userMessage }
-    ]);
-    
-    setIsProcessingMessage(true);
+    setIsSaving(true);
+    setError(null);
     
     try {
-      // Call the chat API
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          docType: activeDocType,
-          content: documents[activeDocType].content,
-          message: userMessage
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send message');
+      const title = currentPRD.split('\n')[0].replace('#', '').trim();
+      const response = await saveFavorite(currentPRD, title);
+      if (response.success) {
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+      } else {
+        throw new Error(response.error || 'Failed to save to favorites');
       }
-      
-      const data = await response.json();
-      
-      // Add AI response to chat
-      setChatMessages(prev => [
-        ...prev,
-        { isUser: false, message: data.response }
-      ]);
-      
-      // If response includes updated content, update the document
-      if (data.updatedContent) {
-        setDocuments(prev => ({
-          ...prev,
-          [activeDocType]: {
-            ...prev[activeDocType],
-            content: data.updatedContent
-          }
-        }));
-      }
-      
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setChatMessages(prev => [
-        ...prev,
-        { isUser: false, message: 'Sorry, there was an error processing your message. Please try again.' }
-      ]);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
-      setIsProcessingMessage(false);
+      setIsSaving(false);
     }
   };
-  
-  // Accept refinement and close chat
-  const handleAcceptRefinement = () => {
-    setShowChatModal(false);
-  };
-  
-  // Update documents state when prdContent changes from props
-  useEffect(() => {
-    if (prdContent) {
-      setDocuments(prev => ({
-        ...prev,
-        PRD: {
-          ...prev.PRD,
-          content: prdContent,
-          isGenerated: true
-        }
-      }));
-    }
-  }, [prdContent]);
-  
-  // Main render
+
   return (
     <>
       <ModalOverlay $isOpen={isOpen}>
         <ModalContent>
-          <CloseButton onClick={onClose}><FiX /></CloseButton>
-          
-          <DocumentsNav>
-            <DocumentsTabs>
-              {Object.entries(documents).map(([key, doc]) => (
-                <DocumentTab 
-                  key={key} 
-                  $isActive={activeDocType === key as DocumentType}
-                  onClick={() => handleSelectDocument(key as DocumentType)}
-                >
-                  {doc.title}
-                </DocumentTab>
-              ))}
-            </DocumentsTabs>
-          </DocumentsNav>
-          
-          <DocumentsList>
-            {Object.entries(documents).map(([key, doc]) => (
-              <DocumentItem 
-                key={key}
-                $isActive={activeDocType === key as DocumentType}
-                $isGenerated={doc.isGenerated}
-                onClick={() => handleSelectDocument(key as DocumentType)}
-              >
-                <DocumentIcon>{doc.icon}</DocumentIcon>
-                <DocumentInfo>
-                  <DocumentTitle>{doc.title}</DocumentTitle>
-                  <DocumentStatus $isGenerated={doc.isGenerated}>
-                    {doc.isGenerating ? (
-                      <>
-                        <FiLoader /> Generating...
-                        <ProgressBar />
-                      </>
-                    ) : doc.isGenerated ? (
-                      <>
-                        <FiCheck /> Generated (4-hour implementation)
-                      </>
-                    ) : (
-                      'Click to generate'
-                    )}
-                  </DocumentStatus>
-                </DocumentInfo>
-              </DocumentItem>
-            ))}
-          </DocumentsList>
-          
-          {activeDocType && documents[activeDocType].isGenerated && (
-            <>
-              <PRDContent dangerouslySetInnerHTML={{ __html: markdownToHtml(documents[activeDocType].content) }} />
-              
-              <ActionButtonsContainer>
-                <Button 
-                  onClick={handleCopy} 
-                  variant="outline"
-                  $hasIcon={true}
-                  icon={copiedToClipboard ? <FiCheck /> : <FiCopy />}
-                >
-                  {copiedToClipboard ? 'Copied!' : 'Copy to Clipboard'}
-                </Button>
-                <Button 
-                  onClick={handleDownload}
-                  variant="outline"
-                  $hasIcon={true}
-                  icon={<FiDownload />}
-                >
-                  Download Markdown
-                </Button>
-                <Button 
-                  onClick={handleRefinePRD}
-                  variant="primary"
-                  $hasIcon={true}
-                  icon={<FiRefreshCw />}
-                >
-                  Refine with AI
-                </Button>
-              </ActionButtonsContainer>
-            </>
-          )}
-          
-          {activeDocType && documents[activeDocType].isGenerating && (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <LoadingSpinner />
-              <p>Generating {documents[activeDocType].title}...</p>
-              <p>This will include a 4-hour implementation timeline</p>
-            </div>
+          <CloseButton onClick={onClose}>
+            <FiX />
+          </CloseButton>
+
+          <PRDContent dangerouslySetInnerHTML={{ __html: markdownToHtml(currentPRD) }} />
+
+          <ActionButtonsContainer>
+            <Button onClick={handleCopy}>
+              <FiCopy /> Copy
+            </Button>
+            <Button onClick={handleDownload}>
+              <FiDownload /> Download
+            </Button>
+            <Button onClick={handleRefinePRD}>
+              <FiRefreshCw /> Refine
+            </Button>
+            <Button onClick={handleChatWithJuici}>
+              <FiSend /> Chat with Juici
+            </Button>
+            <Button 
+              onClick={handleSaveToFavorites}
+              disabled={isSaving || isSaved}
+            >
+              {isSaving ? <FiLoader /> : isSaved ? <FiCheck /> : <FiStar />}
+              {isSaving ? 'Saving...' : isSaved ? 'Saved!' : 'Save to Favorites'}
+            </Button>
+          </ActionButtonsContainer>
+
+          {error && (
+            <ErrorMessage>
+              {error}
+            </ErrorMessage>
           )}
         </ModalContent>
       </ModalOverlay>
-      
-      {/* Refinement Input Modal */}
-      {showRefinementModal && (
-        <ModalOverlay $isOpen={true}>
-          <RefinePRDModal>
-            <CloseButton onClick={() => setShowRefinementModal(false)}><FiX /></CloseButton>
-            <h2>Refine {documents[activeDocType].title}</h2>
-            <p>Describe how you'd like to improve this document:</p>
-            <RefinePRDInput 
-              value={refinementInput}
-              onChange={(e) => setRefinementInput(e.target.value)}
-              placeholder="e.g., Add more details about the user authentication flow"
+
+      {/* Refinement Modal */}
+      <ModalOverlay $isOpen={showRefinementModal}>
+        <RefinePRDModal>
+          <CloseButton onClick={() => setShowRefinementModal(false)}>
+            <FiX />
+          </CloseButton>
+          <h2>Refine PRD</h2>
+          <RefinePRDInput
+            value={refinementPrompt}
+            onChange={(e) => setRefinementPrompt(e.target.value)}
+            placeholder="Enter your refinement instructions..."
+          />
+          <ActionButtonsContainer>
+            <Button 
+              onClick={submitRefinement}
+              disabled={isGenerating}
+            >
+              {isGenerating ? <FiLoader /> : <FiRefreshCw />}
+              {isGenerating ? 'Refining...' : 'Submit Refinement'}
+            </Button>
+          </ActionButtonsContainer>
+        </RefinePRDModal>
+      </ModalOverlay>
+
+      {/* Chat Modal */}
+      <ModalOverlay $isOpen={showChatModal}>
+        <RefinementChatContainer>
+          <CloseButton onClick={() => setShowChatModal(false)}>
+            <FiX />
+          </CloseButton>
+          <h2>Chat with Juici</h2>
+          <ChatMessagesContainer>
+            {chatMessages.map((message, index) => (
+              <ChatMessage key={index} isUser={message.isUser}>
+                {message.text}
+              </ChatMessage>
+            ))}
+          </ChatMessagesContainer>
+          <RefinementInputContainer>
+            <RefinementInput
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Type your message..."
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
             />
-            <ActionButtonsContainer>
-              <Button onClick={() => setShowRefinementModal(false)} variant="outline">
-                Cancel
-              </Button>
-              <Button onClick={submitRefinement} variant="primary" disabled={!refinementInput.trim()}>
-                Submit
-              </Button>
-            </ActionButtonsContainer>
-          </RefinePRDModal>
-        </ModalOverlay>
-      )}
-      
-      {/* Chat Modal for Refinement */}
-      {showChatModal && (
-        <ModalOverlay $isOpen={true}>
-          <RefinementChatContainer>
-            <CloseButton onClick={() => setShowChatModal(false)}><FiX /></CloseButton>
-            <h2>Refining {documents[activeDocType].title}</h2>
-            
-            <ChatMessagesContainer>
-              {chatMessages.map((msg, index) => (
-                <ChatMessage key={index} isUser={msg.isUser}>
-                  {msg.message}
-                </ChatMessage>
-              ))}
-              {isProcessingMessage && (
-                <ChatMessage>
-                  <LoadingSpinner style={{ width: '20px', height: '20px' }} />
-                </ChatMessage>
-              )}
-            </ChatMessagesContainer>
-            
-            <RefinementInputContainer>
-              <RefinementInput 
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                placeholder="Type your message here..."
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
-              />
-              <SendButton onClick={sendChatMessage} disabled={!currentMessage.trim() || isProcessingMessage}>
-                <FiSend />
-              </SendButton>
-            </RefinementInputContainer>
-            
-            <ActionButtonsContainer>
-              <Button onClick={handleAcceptRefinement} variant="primary">
-                Accept Changes & Close
-              </Button>
-            </ActionButtonsContainer>
-          </RefinementChatContainer>
-        </ModalOverlay>
-      )}
+            <Button 
+              onClick={sendChatMessage}
+              disabled={isGenerating || !chatInput.trim()}
+            >
+              {isGenerating ? <FiLoader /> : <FiSend />}
+            </Button>
+          </RefinementInputContainer>
+        </RefinementChatContainer>
+      </ModalOverlay>
     </>
   );
 };
@@ -870,5 +605,41 @@ const LoadingSpinner = styled.div`
     }
   }
 `;
+
+// Helper function to convert markdown to HTML
+const markdownToHtml = (markdown: string): string => {
+  let html = markdown
+    // Headers
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Code blocks
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Lists
+    .replace(/^\s*\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>')
+    .replace(/^\s*[\*\-]\s+(.*$)/gim, '<ul><li>$1</li></ul>')
+    // Blockquotes
+    .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    // Line breaks
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br/>');
+
+  // Fix consecutive list items
+  html = html
+    .replace(/<\/ol><ol>/g, '')
+    .replace(/<\/ul><ul>/g, '')
+    // Wrap in paragraphs if not already wrapped
+    .replace(/^(.+?)(?=<\/p>|$)/, '<p>$1</p>');
+
+  return html;
+};
 
 export default PRDModal; 

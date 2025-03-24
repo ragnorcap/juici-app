@@ -1,10 +1,48 @@
 import { createClient } from '@supabase/supabase-js';
 
-// These are public keys and safe to be in the client
-const supabaseUrl = 'https://xewjbqfvrrrxbrvnhofz.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhld2picWZ2cnJyeGJydm5ob2Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNzI4NjQsImV4cCI6MjA1NTc0ODg2NH0.CTi1Okkb2-U9YwFKOUticNlbZHBaH-foQDn52Z7c0-g';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Types for our database tables
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Favorite {
+  id: string;
+  user_id: string;
+  idea_id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Project {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  status: 'planning' | 'in_progress' | 'completed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Task {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'completed';
+  due_date: string;
+  created_at: string;
+  updated_at: string;
+}
 
 // User types
 export type UserSession = {

@@ -2,6 +2,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './styles/theme';
 import GlobalStyles from './styles/GlobalStyles';
+import { AuthProvider } from './contexts/AuthContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
+import Planner from './components/Planner';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -26,37 +29,48 @@ import OrganizingFavorites from './pages/tutorials/OrganizingFavorites';
 
 const App = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyles />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/tutorials" element={<TutorialsPage />} />
-        <Route path="/blog" element={<BlogPage />} />
-        
-        {/* Tutorial routes */}
-        <Route path="/tutorials/getting-started" element={<GettingStarted />} />
-        <Route path="/tutorials/creating-prds" element={<CreatingPRDs />} />
-        <Route path="/tutorials/advanced-techniques" element={<AdvancedTechniques />} />
-        <Route path="/tutorials/api-integration" element={<APIIntegration />} />
-        <Route path="/tutorials/organizing-favorites" element={<OrganizingFavorites />} />
-        <Route path="/tutorials/using-with-cursor" element={<UsingWithCursor />} />
-        
-        {/* Blog routes */}
-        <Route path="/blog/how-we-built-juici" element={<HowWeBuiltJuici />} />
-        <Route path="/blog/ai-in-product-development" element={<AIInProductDevelopment />} />
-        <Route path="/blog/best-practices-software-projects" element={<BestPracticesSoftwareProjects />} />
-        
-        {/* App route */}
-        <Route path="/app" element={<AppPage />} />
-        
-        {/* Handle 404 */}
-        <Route path="/404" element={<NotFoundPage />} />
-        <Route path="*" element={<Navigate to="/404" replace />} />
-      </Routes>
-    </ThemeProvider>
+    <AuthProvider>
+      <FavoritesProvider>
+        <ThemeProvider theme={theme}>
+          <GlobalStyles />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/tutorials" element={<TutorialsPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            
+            {/* Tutorial routes */}
+            <Route path="/tutorials/getting-started" element={<GettingStarted />} />
+            <Route path="/tutorials/creating-prds" element={<CreatingPRDs />} />
+            <Route path="/tutorials/advanced-techniques" element={<AdvancedTechniques />} />
+            <Route path="/tutorials/api-integration" element={<APIIntegration />} />
+            <Route path="/tutorials/organizing-favorites" element={<OrganizingFavorites />} />
+            <Route path="/tutorials/using-with-cursor" element={<UsingWithCursor />} />
+            
+            {/* Blog routes */}
+            <Route path="/blog/how-we-built-juici" element={<HowWeBuiltJuici />} />
+            <Route path="/blog/ai-in-product-development" element={<AIInProductDevelopment />} />
+            <Route path="/blog/best-practices-software-projects" element={<BestPracticesSoftwareProjects />} />
+            
+            {/* App route */}
+            <Route path="/app" element={<AppPage />} />
+            
+            {/* Planner route */}
+            <Route path="/planner" element={
+              <ProtectedRoute>
+                <Planner />
+              </ProtectedRoute>
+            } />
+            
+            {/* Handle 404 */}
+            <Route path="/404" element={<NotFoundPage />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+        </ThemeProvider>
+      </FavoritesProvider>
+    </AuthProvider>
   );
 };
 

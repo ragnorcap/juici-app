@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiList, FiActivity, FiBarChart2, FiCheckSquare, FiClipboard, FiPackage, FiStar, FiPlusCircle } from 'react-icons/fi';
+import { FiList, FiActivity, FiBarChart2, FiCheckSquare, FiClipboard, FiPackage, FiStar, FiPlusCircle, FiClock, FiSettings, FiRefreshCw } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
 import { Link } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
+import { useAuth } from '../contexts/AuthContext';
+import { useFavorites } from '../contexts/FavoritesContext';
+import { supabase } from '../lib/supabase';
+import LoadingSpinner from '../components/LoadingSpinner';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -156,441 +161,577 @@ const chartOptions = {
 // Styled Components
 const DashboardContainer = styled.div`
   padding: 2rem;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    grid-template-columns: 2fr 1fr;
-  }
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
-const AnalyticsSection = styled.div`
-  grid-column: 1 / -1;
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    grid-column: 1 / 2;
-    grid-row: 1 / 3;
-  }
-`;
-
-const PRDTrackingSection = styled.div`
-  grid-column: 1 / -1;
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
-  }
-`;
-
-const IdeasSection = styled.div`
-  grid-column: 1 / -1;
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
-  }
-`;
-
-const SectionTitle = styled.h2`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  color: ${props => props.theme.text};
-`;
-
-const SectionGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  
-  @media (min-width: ${props => props.theme.breakpoints.sm}) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  @media (min-width: ${props => props.theme.breakpoints.lg}) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-`;
-
-const ChartContainer = styled.div`
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 1.5rem;
-  height: 400px;
-  margin-bottom: 2rem;
-`;
-
-const MetricsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
-  
-  @media (min-width: ${props => props.theme.breakpoints.md}) {
-    grid-template-columns: repeat(4, 1fr);
-  }
-`;
-
-const MetricCard = styled.div`
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
-const MetricValue = styled.div`
-  font-size: 2rem;
-  font-weight: bold;
-  margin: 0.5rem 0;
-  color: ${props => props.theme.text};
-`;
-
-const MetricLabel = styled.div`
-  font-size: 0.9rem;
-  color: ${props => props.theme.textLight};
-  text-align: center;
-`;
-
-const MetricIcon = styled.div`
-  font-size: 1.5rem;
-  color: ${props => props.theme.purple.main};
-  margin-bottom: 0.5rem;
-`;
-
-const AnalyticsReport = styled.div`
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: ${props => props.theme.borderRadius};
-  padding: 1.5rem;
-`;
-
-const ReportTitle = styled.h3`
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-  color: ${props => props.theme.text};
-`;
-
-const ReportText = styled.p`
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: ${props => props.theme.textLight};
-  margin-bottom: 1rem;
-`;
-
-const PRDCard = styled(Card)`
-  margin-bottom: 1rem;
-`;
-
-const PRDHeader = styled.div`
+const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 2rem;
+`;
+
+const Title = styled.h1`
+  font-size: 2rem;
+  color: #111;
+`;
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const StatCard = styled.div`
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const StatTitle = styled.h3`
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+`;
+
+const StatValue = styled.div`
+  font-size: 2rem;
+  font-weight: 600;
+  color: #111;
+`;
+
+const HistoryList = styled.div`
+  display: grid;
+  gap: 1rem;
+`;
+
+const HistoryCard = styled.div<{ $isFavorite: boolean }>`
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid ${props => props.$isFavorite ? '#ffd700' : '#0070f3'};
+`;
+
+const HistoryHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 1rem;
 `;
 
-const PRDTitle = styled.h3`
-  font-size: 1.1rem;
+const HistoryTitle = styled.h3`
+  font-size: 1.2rem;
+  color: #111;
   margin: 0;
 `;
 
-const PRDCategory = styled.span`
+const HistoryMeta = styled.div`
+  display: flex;
+  gap: 1rem;
   font-size: 0.8rem;
-  background-color: rgba(138, 79, 255, 0.3);
-  padding: 0.25rem 0.5rem;
-  border-radius: 1rem;
+  color: #666;
 `;
 
-const PRDProgress = styled.div`
-  width: 100%;
-  height: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  margin: 1rem 0;
-  overflow: hidden;
+const PreferencesSection = styled.div`
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
 `;
 
-const PRDProgressFill = styled.div<{ progress: number }>`
-  height: 100%;
-  width: ${props => props.progress}%;
-  background-color: ${props => props.theme.purple.main};
-  border-radius: 1rem;
+const PreferencesForm = styled.form`
+  display: grid;
+  gap: 1rem;
 `;
 
-const NextStepBox = styled.div`
-  background-color: rgba(64, 223, 223, 0.1);
-  border-left: 3px solid ${props => props.theme.green.main};
-  padding: 1rem;
-  margin-top: 1rem;
-`;
-
-const NextStepTitle = styled.div`
-  font-size: 0.9rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+const FormGroup = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
 `;
 
-const NextStepAction = styled.button`
-  background-color: transparent;
-  border: 1px solid ${props => props.theme.green.main};
-  color: ${props => props.theme.green.main};
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  font-size: 0.85rem;
+const Label = styled.label`
+  font-weight: 500;
+  color: #111;
+`;
+
+const Toggle = styled.input`
+  width: 3rem;
+  height: 1.5rem;
+  appearance: none;
+  background: #ddd;
+  border-radius: 1rem;
+  position: relative;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: rgba(64, 223, 223, 0.1);
+  transition: background 0.3s;
+
+  &:checked {
+    background: #0070f3;
+  }
+
+  &:before {
+    content: '';
+    position: absolute;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    background: white;
+    top: 0.15rem;
+    left: 0.15rem;
+    transition: transform 0.3s;
+  }
+
+  &:checked:before {
+    transform: translateX(1.5rem);
   }
 `;
 
-const EmptyStateContainer = styled.div`
-  text-align: center;
-  padding: 2rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: ${props => props.theme.borderRadius};
-`;
-
-const EmptyStateIcon = styled.div`
-  font-size: 3rem;
-  color: ${props => props.theme.purple.main};
+const ErrorMessage = styled.div`
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 1rem;
+  border-radius: 4px;
   margin-bottom: 1rem;
 `;
 
-const EmptyStateTitle = styled.h3`
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-`;
+interface Project {
+  id: string;
+  title: string;
+  category: string;
+  steps: {
+    id: number;
+    title: string;
+    completed: boolean;
+  }[];
+  progress: number;
+  created_at: string;
+}
 
-const EmptyStateText = styled.p`
-  font-size: 0.95rem;
-  color: ${props => props.theme.textLight};
-  margin-bottom: 1.5rem;
-`;
+interface Idea {
+  id: string;
+  title: string;
+  category: string;
+  created_at: string;
+}
 
-const EmptyStateButton = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: ${props => props.theme.purple.main};
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 2rem;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: ${props => props.theme.purple.dark};
-  }
-`;
+interface IdeaHistory {
+  id: string;
+  idea_text: string;
+  generated_prd: string;
+  generated_at: string;
+  favorite: boolean;
+  tags: string[];
+}
+
+interface UserPreferences {
+  theme: 'light' | 'dark';
+  notification_enabled: boolean;
+}
 
 const DashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('prds');
-  const [prds, setPrds] = useState(mockPRDs);
-  const [ideas, setIdeas] = useState(mockIdeas);
-  
-  const markStepComplete = (prdId: number, stepId: number) => {
-    setPrds(prevPrds => prevPrds.map(prd => {
-      if (prd.id === prdId) {
-        const updatedSteps = prd.steps.map(step => 
-          step.id === stepId ? { ...step, completed: true } : step
-        );
-        
-        // Calculate new progress
-        const completedSteps = updatedSteps.filter(step => step.completed).length;
-        const progress = Math.round((completedSteps / updatedSteps.length) * 100);
-        
-        return { ...prd, steps: updatedSteps, progress };
+  const { user } = useAuth();
+  const { favorites } = useFavorites();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [ideaHistory, setIdeaHistory] = useState<IdeaHistory[]>([]);
+  const [preferences, setPreferences] = useState<UserPreferences>({
+    theme: 'light',
+    notification_enabled: true,
+  });
+
+  // Fetch user's projects and ideas
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch projects
+        const { data: projectsData, error: projectsError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (projectsError) throw projectsError;
+
+        // Fetch ideas
+        const { data: ideasData, error: ideasError } = await supabase
+          .from('ideas')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (ideasError) throw ideasError;
+
+        // Fetch idea history
+        const { data: historyData, error: historyError } = await supabase
+          .from('idea_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('generated_at', { ascending: false });
+
+        if (historyError) throw historyError;
+
+        // Fetch user preferences
+        const { data: prefsData, error: prefsError } = await supabase
+          .from('user_preferences')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (prefsError && prefsError.code !== 'PGRST116') { // Not found error
+          throw prefsError;
+        }
+
+        setProjects(projectsData || []);
+        setIdeas(ideasData || []);
+        setIdeaHistory(historyData || []);
+
+        if (prefsData) {
+          setPreferences(prefsData);
+        } else {
+          // Create default preferences if none exist
+          const { error: insertError } = await supabase
+            .from('user_preferences')
+            .insert([
+              {
+                user_id: user.id,
+                theme: 'light',
+                notification_enabled: true,
+              },
+            ]);
+
+          if (insertError) throw insertError;
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch dashboard data');
+        console.error('Error fetching dashboard data:', err);
+      } finally {
+        setIsLoading(false);
       }
-      return prd;
-    }));
+    };
+
+    fetchData();
+  }, [user, navigate]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!user) return;
+
+    const projectsSubscription = supabase
+      .channel('projects_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
+    const ideasSubscription = supabase
+      .channel('ideas_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ideas',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchIdeas();
+        }
+      )
+      .subscribe();
+
+    const historySubscription = supabase
+      .channel('idea_history_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'idea_history',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          fetchData(); // Refresh data when changes occur
+        }
+      )
+      .subscribe();
+
+    const prefsSubscription = supabase
+      .channel('preferences_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_preferences',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          fetchData(); // Refresh data when changes occur
+        }
+      )
+      .subscribe();
+
+    return () => {
+      projectsSubscription.unsubscribe();
+      ideasSubscription.unsubscribe();
+      historySubscription.unsubscribe();
+      prefsSubscription.unsubscribe();
+    };
+  }, [user]);
+
+  const fetchProjects = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    }
   };
-  
-  const getNextStep = (prd: typeof mockPRDs[0]) => {
-    return prd.steps.find(step => !step.completed);
+
+  const fetchIdeas = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('ideas')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setIdeas(data || []);
+    } catch (err) {
+      console.error('Error fetching ideas:', err);
+    }
   };
-  
-  const getTotalIdeas = () => {
-    return ideas.length;
+
+  const markStepComplete = async (projectId: string, stepId: number) => {
+    if (!user) return;
+
+    try {
+      const project = projects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const updatedSteps = project.steps.map(step =>
+        step.id === stepId ? { ...step, completed: true } : step
+      );
+
+      const progress = Math.round(
+        (updatedSteps.filter(step => step.completed).length / updatedSteps.length) * 100
+      );
+
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          steps: updatedSteps,
+          progress,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', projectId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      await fetchProjects();
+    } catch (err) {
+      console.error('Error updating step:', err);
+    }
   };
-  
-  const getTotalPRDs = () => {
-    return prds.length;
+
+  const getNextStep = (project: Project) => {
+    return project.steps.find(step => !step.completed);
   };
-  
+
+  const getTotalIdeas = () => ideas.length;
+  const getTotalProjects = () => projects.length;
+  const getTotalFavorites = () => favorites.length;
+
   const getAverageProgress = () => {
-    if (prds.length === 0) return 0;
-    const total = prds.reduce((sum, prd) => sum + prd.progress, 0);
-    return Math.round(total / prds.length);
+    if (projects.length === 0) return 0;
+    const totalProgress = projects.reduce((sum, project) => sum + project.progress, 0);
+    return Math.round(totalProgress / projects.length);
   };
-  
+
   const getCompletedSteps = () => {
-    return prds.reduce((sum, prd) => {
-      return sum + prd.steps.filter(step => step.completed).length;
+    return projects.reduce((total, project) => {
+      return total + project.steps.filter(step => step.completed).length;
     }, 0);
   };
-  
+
+  const handlePreferencesUpdate = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked, type } = e.target;
+    const value = type === 'checkbox' ? checked : e.target.value;
+
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .update({ [name]: value })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      setPreferences(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <LoadingSpinner />
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <ErrorMessage>{error}</ErrorMessage>
+      </Layout>
+    );
+  }
+
+  // Update category data based on real data
+  const categoryData = {
+    labels: Array.from(new Set([...projects.map(p => p.category), ...ideas.map(i => i.category)])),
+    datasets: [
+      {
+        label: 'Number of Projects',
+        data: projects.reduce((acc, project) => {
+          acc[project.category] = (acc[project.category] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+        backgroundColor: 'rgba(138, 79, 255, 0.8)',
+        borderColor: 'rgba(138, 79, 255, 1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Number of Ideas',
+        data: ideas.reduce((acc, idea) => {
+          acc[idea.category] = (acc[idea.category] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+        backgroundColor: 'rgba(64, 223, 223, 0.8)',
+        borderColor: 'rgba(64, 223, 223, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
     <Layout>
-    <DashboardContainer>
-        <AnalyticsSection>
-          <SectionTitle>
-            <FiBarChart2 /> Dashboard Analytics
-          </SectionTitle>
-          
-          <MetricsGrid>
-            <MetricCard>
-              <MetricIcon>
-                <FiList />
-              </MetricIcon>
-              <MetricValue>{getTotalPRDs()}</MetricValue>
-              <MetricLabel>Total PRDs</MetricLabel>
-            </MetricCard>
-            
-            <MetricCard>
-              <MetricIcon>
-                <FiStar />
-              </MetricIcon>
-              <MetricValue>{getTotalIdeas()}</MetricValue>
-              <MetricLabel>Saved Ideas</MetricLabel>
-            </MetricCard>
-            
-            <MetricCard>
-              <MetricIcon>
-                <FiActivity />
-              </MetricIcon>
-              <MetricValue>{getAverageProgress()}%</MetricValue>
-              <MetricLabel>Average Progress</MetricLabel>
-            </MetricCard>
-            
-            <MetricCard>
-              <MetricIcon>
-                <FiCheckSquare />
-              </MetricIcon>
-              <MetricValue>{getCompletedSteps()}</MetricValue>
-              <MetricLabel>Completed Steps</MetricLabel>
-            </MetricCard>
-          </MetricsGrid>
-          
-          <ChartContainer>
-            <Bar data={categoryData} options={chartOptions} />
-          </ChartContainer>
-          
-          <AnalyticsReport>
-            <ReportTitle>Weekly Progress Report</ReportTitle>
-            <ReportText>
-              You've been making steady progress on your projects! Your most active category this week is 
-              <strong> AI/ML</strong> with 67% completion rate.
-            </ReportText>
-            <ReportText>
-              We notice you have 3 PRDs below 50% completion. Consider focusing on these projects to maintain 
-              consistent progress across all your initiatives.
-            </ReportText>
-            <ReportText>
-              You've completed {getCompletedSteps()} steps across all projects this week, which puts you 
-              ahead of 75% of users. Keep up the great work!
-            </ReportText>
-          </AnalyticsReport>
-        </AnalyticsSection>
-        
-        <PRDTrackingSection>
-          <SectionTitle>
-            <FiClipboard /> PRD Tracker
-          </SectionTitle>
-          
-          {prds.length > 0 ? (
-            prds.map(prd => {
-              const nextStep = getNextStep(prd);
-              
-              return (
-                <PRDCard key={prd.id}>
-                  <PRDHeader>
-                    <PRDTitle>{prd.title}</PRDTitle>
-                    <PRDCategory>{prd.category}</PRDCategory>
-                  </PRDHeader>
-                  
-                  <PRDProgress>
-                    <PRDProgressFill progress={prd.progress} />
-                  </PRDProgress>
-                  
-                  <div>Progress: {prd.progress}% complete</div>
-                  
-                  {nextStep && (
-                    <NextStepBox>
-                      <NextStepTitle>
-                        <FiCheckSquare /> Next Step
-                      </NextStepTitle>
-                      <div>{nextStep.title}</div>
-                      <NextStepAction 
-                        onClick={() => markStepComplete(prd.id, nextStep.id)}
-                      >
-                        <FiCheckSquare /> Mark as Complete
-                      </NextStepAction>
-                    </NextStepBox>
-                  )}
-                </PRDCard>
-              );
-            })
-          ) : (
-            <EmptyStateContainer>
-              <EmptyStateIcon>
-                <FiClipboard />
-              </EmptyStateIcon>
-              <EmptyStateTitle>No PRDs yet</EmptyStateTitle>
-              <EmptyStateText>
-                Start generating PRDs for your ideas to track your progress here.
-              </EmptyStateText>
-              <EmptyStateButton to="/">
-                <FiPlusCircle /> Generate a PRD
-              </EmptyStateButton>
-            </EmptyStateContainer>
-          )}
-        </PRDTrackingSection>
-        
-        <IdeasSection>
-          <SectionTitle>
-            <FiPackage /> Saved Ideas
-          </SectionTitle>
-          
-          {ideas.length > 0 ? (
-            ideas.map(idea => (
-              <Card key={idea.id}>
-                <PRDHeader>
-                  <PRDTitle>{idea.title}</PRDTitle>
-                  <PRDCategory>{idea.category}</PRDCategory>
-                </PRDHeader>
-                <div>Created: {idea.dateCreated}</div>
-              </Card>
-            ))
-          ) : (
-            <EmptyStateContainer>
-              <EmptyStateIcon>
-                <FiPackage />
-              </EmptyStateIcon>
-              <EmptyStateTitle>No saved ideas</EmptyStateTitle>
-              <EmptyStateText>
-                Save ideas that inspire you to see them here.
-              </EmptyStateText>
-              <EmptyStateButton to="/">
-                <FiPlusCircle /> Generate Ideas
-              </EmptyStateButton>
-            </EmptyStateContainer>
-          )}
-        </IdeasSection>
-    </DashboardContainer>
+      <DashboardContainer>
+        <Header>
+          <Title>Dashboard</Title>
+        </Header>
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
+        <StatsGrid>
+          <StatCard>
+            <StatTitle>Total Ideas Generated</StatTitle>
+            <StatValue>{ideaHistory.length}</StatValue>
+          </StatCard>
+          <StatCard>
+            <StatTitle>Favorite Ideas</StatTitle>
+            <StatValue>{favorites.length}</StatValue>
+          </StatCard>
+          <StatCard>
+            <StatTitle>Last Activity</StatTitle>
+            <StatValue>Mar 20, 2025</StatValue>
+          </StatCard>
+        </StatsGrid>
+
+        <PreferencesSection>
+          <h2>Preferences</h2>
+          <PreferencesForm>
+            <FormGroup>
+              <Label htmlFor="theme">Dark Theme</Label>
+              <Toggle
+                type="checkbox"
+                id="theme"
+                name="theme"
+                checked={preferences.theme === 'dark'}
+                onChange={(e) => handlePreferencesUpdate({
+                  ...e,
+                  target: {
+                    ...e.target,
+                    name: 'theme',
+                    value: e.target.checked ? 'dark' : 'light',
+                  },
+                } as any)}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label htmlFor="notifications">Notifications</Label>
+              <Toggle
+                type="checkbox"
+                id="notifications"
+                name="notification_enabled"
+                checked={preferences.notification_enabled}
+                onChange={handlePreferencesUpdate}
+              />
+            </FormGroup>
+          </PreferencesForm>
+        </PreferencesSection>
+
+        <h2>Recent Activity</h2>
+        <HistoryList>
+          {ideaHistory.map((item) => (
+            <HistoryCard key={item.id} $isFavorite={item.favorite}>
+              <HistoryHeader>
+                <HistoryTitle>{item.idea_text}</HistoryTitle>
+                {item.favorite && <FiStar style={{ color: '#ffd700' }} />}
+              </HistoryHeader>
+              <HistoryMeta>
+                <span>
+                  <FiClock /> Mar 20, 2025
+                </span>
+                {item.tags.map((tag) => (
+                  <span key={tag}>#{tag}</span>
+                ))}
+              </HistoryMeta>
+            </HistoryCard>
+          ))}
+        </HistoryList>
+      </DashboardContainer>
     </Layout>
   );
 };
