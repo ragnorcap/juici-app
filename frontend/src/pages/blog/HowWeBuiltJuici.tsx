@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { PageTitle } from '../../styles/shared';
 import { FiCalendar, FiUser, FiTag, FiChevronLeft } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import CodeBlock from '../../components/CodeBlock';
+import ReactMarkdown from 'react-markdown';
+import { FiX, FiSave, FiDownload } from 'react-icons/fi';
 
 // Styled components
 const PageContainer = styled.div`
