@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validate Supabase credentials
+if (!supabaseUrl || supabaseUrl === '') {
+  console.error('Missing REACT_APP_SUPABASE_URL environment variable. Make sure to set it in your .env file or in your deployment environment.');
+}
+
+if (!supabaseAnonKey || supabaseAnonKey === '') {
+  console.error('Missing REACT_APP_SUPABASE_ANON_KEY environment variable. Make sure to set it in your .env file or in your deployment environment.');
+}
+
+export const supabase = createClient(
+  supabaseUrl || '',
+  supabaseAnonKey || ''
+);
 
 // Types for our database tables
 export interface User {
