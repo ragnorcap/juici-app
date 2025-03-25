@@ -9,6 +9,7 @@ import DocumentGenerator from './DocumentGenerator';
 import { useIdea } from '../contexts/IdeaContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Idea } from '../types';
+import { PageTitle } from '../styles/shared';
 
 // Styled components
 const GeneratorContainer = styled.div`
