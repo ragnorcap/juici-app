@@ -5,36 +5,38 @@ import { useAuth } from '../contexts/AuthContext';
 
 const FormContainer = styled.div`
   max-width: 400px;
-  margin: 2rem auto;
   padding: 2rem;
-  background: ${props => props.theme.colors.background.secondary};
+  background: ${props => props.theme.background};
   border-radius: ${props => props.theme.borderRadius};
-  box-shadow: ${props => props.theme.boxShadow};
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background: ${props => props.theme.background};
 `;
 
 const Input = styled.input`
-  padding: 0.75rem;
-  border: 1px solid ${props => props.theme.colors.border};
+  padding: 0.75rem 1rem;
   border-radius: ${props => props.theme.borderRadius};
-  background: ${props => props.theme.colors.background.primary};
-  color: ${props => props.theme.colors.text.primary};
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: ${props => props.theme.text};
   font-size: 1rem;
+  width: 100%;
+  transition: ${props => props.theme.transition};
   
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.purple.main};
+    border-color: ${props => props.theme.purple.main};
   }
 `;
 
 const Button = styled.button`
-  padding: 0.75rem;
-  background: ${props => props.theme.colors.purple.main};
+  padding: 0.75rem 1rem;
+  background: ${props => props.theme.purple.main};
   color: white;
   border: none;
   border-radius: ${props => props.theme.borderRadius};
@@ -44,27 +46,27 @@ const Button = styled.button`
   transition: ${props => props.theme.transition};
   
   &:hover {
-    background: ${props => props.theme.colors.purple.dark};
+    background: ${props => props.theme.purple.dark};
   }
   
   &:disabled {
-    background: ${props => props.theme.colors.textLight};
+    background: ${props => props.theme.textLight};
     cursor: not-allowed;
   }
 `;
 
 const ErrorMessage = styled.p`
-  color: ${props => props.theme.colors.error};
+  color: ${props => props.theme.error};
   margin-top: 0.5rem;
 `;
 
 const ToggleText = styled.p`
   text-align: center;
   margin-top: 1rem;
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${props => props.theme.textLight};
   
   span {
-    color: ${props => props.theme.colors.purple.main};
+    color: ${props => props.theme.purple.main};
     cursor: pointer;
     
     &:hover {

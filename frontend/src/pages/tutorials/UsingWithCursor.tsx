@@ -48,7 +48,7 @@ const MetaInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  color: ${props => props.theme.colors.text.secondary};
+  color: ${props => props.theme.textLight};
   font-size: 0.9rem;
 `;
 
@@ -59,13 +59,13 @@ const MetaItem = styled.div`
 `;
 
 const Content = styled.article`
-  color: ${props => props.theme.colors.text.primary};
+  color: ${props => props.theme.text};
   line-height: 1.6;
 
   h2 {
     font-size: 1.8rem;
     margin: 2rem 0 1rem;
-    color: ${props => props.theme.colors.text.primary};
+    color: ${props => props.theme.text};
   }
 
   p {

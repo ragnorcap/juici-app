@@ -10,7 +10,7 @@ const GlobalStyles = createGlobalStyle`
   html, body {
     font-family: ${props => props.theme.fonts.body};
     background-color: #000000;
-    color: ${props => props.theme.colors.text};
+    color: ${props => props.theme.text};
     scroll-behavior: smooth;
     overflow-x: hidden;
     line-height: 1.5;
@@ -54,12 +54,12 @@ const GlobalStyles = createGlobalStyle`
   }
 
   a {
-    color: ${props => props.theme.colors.text};
+    color: ${props => props.theme.text};
     text-decoration: none;
     transition: all 0.2s ease;
     
     &:hover {
-      color: ${props => props.theme.colors.green.main};
+      color: ${props => props.theme.green.main};
     }
   }
 
@@ -88,17 +88,17 @@ const GlobalStyles = createGlobalStyle`
   }
 
   ::-webkit-scrollbar-thumb {
-    background: ${props => props.theme.colors.purple.dark};
+    background: ${props => props.theme.purple.dark};
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: ${props => props.theme.colors.purple.main};
+    background: ${props => props.theme.purple.main};
   }
 
   /* Selection style */
   ::selection {
-    background: ${props => props.theme.colors.green.main};
+    background: ${props => props.theme.green.main};
     color: #000;
   }
 `;

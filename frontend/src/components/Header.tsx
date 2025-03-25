@@ -35,13 +35,13 @@ const NavLinks = styled.div`
 `;
 
 const NavLink = styled(Link)`
-  color: ${props => props.theme.colors.text.primary};
+  color: ${props => props.theme.text};
   text-decoration: none;
   font-weight: ${props => props.theme.fonts.weights.medium};
   transition: ${props => props.theme.transition};
   
   &:hover {
-    color: ${props => props.theme.colors.purple.main};
+    color: ${props => props.theme.purple.main};
   }
 `;
 
@@ -53,19 +53,19 @@ const AuthButton = styled(Link)`
   text-decoration: none;
   
   &.signin {
-    color: ${props => props.theme.colors.purple.main};
+    color: ${props => props.theme.purple.main};
     
     &:hover {
-      color: ${props => props.theme.colors.purple.light};
+      color: ${props => props.theme.purple.light};
     }
   }
   
   &.signup {
-    background: ${props => props.theme.colors.purple.main};
+    background: ${props => props.theme.purple.main};
     color: white;
     
     &:hover {
-      background: ${props => props.theme.colors.purple.dark};
+      background: ${props => props.theme.purple.dark};
     }
   }
 `;
