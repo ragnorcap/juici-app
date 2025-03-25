@@ -508,7 +508,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
     isLoading, 
     error: contextError, 
     generatePRD, 
-    prdContent,
+    prdContent, 
     successMessage,
     refineIdea
   } = useIdea();
@@ -555,7 +555,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
           setFilteredPrompts(data.prompts);
           
           // Only set an initial idea if currentIdea is null
-          if (!currentIdea) {
+    if (!currentIdea) {
             console.log("Setting initial idea from API prompts");
             const randomIndex = Math.floor(Math.random() * data.prompts.length);
             const randomPrompt = data.prompts[randomIndex];
@@ -667,7 +667,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
     setSelectedCategories(prev => {
       if (prev.includes(category)) {
         return prev.filter(c => c !== category);
-      } else {
+    } else {
         return [...prev, category];
       }
     });
@@ -784,13 +784,13 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
           </Button>
         </ErrorContainer>
       ) : isLoading ? (
-        <LoadingIndicator>
-          <LoadingDots>
-            <span></span>
-            <span></span>
-            <span></span>
-          </LoadingDots>
-        </LoadingIndicator>
+          <LoadingIndicator>
+            <LoadingDots>
+              <span></span>
+              <span></span>
+              <span></span>
+            </LoadingDots>
+          </LoadingIndicator>
       ) : (
         <>
           <IdeaCard>
@@ -809,25 +809,25 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
                 </CategoryContainer>
                 
                 <ActionButtonsContainer>
-                  <Button 
+          <Button 
                     onClick={handleGenerateIdea} 
                     disabled={isLoading}
                     $hasIcon={true}
-                    icon={<FiRefreshCw />}
+            icon={<FiRefreshCw />}
                     variant="primary"
                   >
                     Generate New Idea
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleGeneratePRD} 
+          </Button>
+          
+          <Button 
+            onClick={handleGeneratePRD} 
                     disabled={isLoading || isGeneratingPRD || !currentIdea}
                     variant="primary" 
                     $hasIcon={true}
-                    icon={<FiFileText />}
-                  >
-                    Generate PRD
-                  </Button>
+            icon={<FiFileText />}
+          >
+            Generate PRD
+          </Button>
                 </ActionButtonsContainer>
               </>
             ) : (
@@ -842,8 +842,8 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ onOpenPRDModal }) => {
                 </CategoryContainer>
               </EmptyStateContainer>
             )}
-          </IdeaCard>
-          
+      </IdeaCard>
+      
           <FilterSection>
             <FilterTitle onClick={() => setShowFilters(!showFilters)}>
               <FiFilter /> Category Filters

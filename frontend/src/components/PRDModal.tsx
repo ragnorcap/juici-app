@@ -66,7 +66,7 @@ const CloseButton = styled.button`
   padding: 0.5rem;
   border-radius: 50%;
   transition: background-color 0.2s;
-
+  
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }
@@ -77,7 +77,7 @@ const PRDContent = styled.div`
   line-height: 1.6;
   font-size: 1rem;
   color: #333;
-
+  
   h1, h2, h3, h4, h5, h6 {
     margin-top: 2rem;
     margin-bottom: 1rem;
@@ -87,19 +87,19 @@ const PRDContent = styled.div`
   p {
     margin-bottom: 1rem;
   }
-
+  
   ul, ol {
     margin-bottom: 1rem;
     padding-left: 2rem;
   }
-
+  
   code {
     background-color: #f5f5f5;
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
     font-family: 'Courier New', Courier, monospace;
   }
-
+  
   pre {
     background-color: #f5f5f5;
     padding: 1rem;
@@ -298,7 +298,7 @@ const DocumentActions = styled.div`
 `;
 
 const ProgressBar = styled.div`
-  width: 100%;
+    width: 100%;
   height: 4px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
@@ -632,14 +632,14 @@ const markdownToHtml = (markdown: string): string => {
     // Line breaks
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br/>');
-
+    
   // Fix consecutive list items
   html = html
     .replace(/<\/ol><ol>/g, '')
     .replace(/<\/ul><ul>/g, '')
     // Wrap in paragraphs if not already wrapped
     .replace(/^(.+?)(?=<\/p>|$)/, '<p>$1</p>');
-
+    
   return html;
 };
 
