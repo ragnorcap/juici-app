@@ -53,7 +53,7 @@ const ServerStatus: React.FC = () => {
 
         if (isConnected && status) {
           setConnectionStatus('connected');
-          const dbStatus = status.database === 'connected' ? 'Database connected' : 'Using local storage';
+          const dbStatus = status.database === 'connected' ? 'Database connected' : 'supabase';
           setStatusMessage(`Server connected: ${dbStatus}`);
           // Reset retries on successful connection
           setRetries(0);

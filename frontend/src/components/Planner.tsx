@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiPlus, FiCheck, FiLoader, FiTrash2, FiEdit2, FiChevronRight, FiChevronDown } from 'react-icons/fi';
+import { FiPlus, FiCheck, FiLoader, FiTrash2, FiEdit2, FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import Button from './Button';
