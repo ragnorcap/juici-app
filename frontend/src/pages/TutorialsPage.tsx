@@ -77,7 +77,7 @@ const PageContainer = styled.div`
   text-align: center;
 `;
 
-const PageTitle = styled.h1`
+const MainTutorialsPageTitle = styled.h1`
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
   color: ${props => props.theme.text};
@@ -241,7 +241,7 @@ const TutorialsPage: React.FC = () => {
   return (
     <Layout>
       <PageContainer>
-        <PageTitle>Juici Tutorials</PageTitle>
+        <MainTutorialsPageTitle>Tutorials</MainTutorialsPageTitle>
         <PageSubtitle>
           Learn how to use Juici to generate ideas, create PRDs, and accelerate your product development process.
         </PageSubtitle>

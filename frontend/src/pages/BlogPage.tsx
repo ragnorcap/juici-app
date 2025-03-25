@@ -14,7 +14,7 @@ const PageContainer = styled.div`
   text-align: center;
 `;
 
-const PageTitle = styled.h1`
+const BlogPageTitle = styled.h1`
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
   color: ${props => props.theme.text};
@@ -265,7 +265,7 @@ const BlogPage: React.FC = () => {
   return (
     <Layout>
       <PageContainer>
-        <PageTitle>Juici Blog</PageTitle>
+        <BlogPageTitle>Juici Blog</BlogPageTitle>
         <PageSubtitle>
           Insights, tutorials, and best practices for generating creative ideas
           and building amazing software products

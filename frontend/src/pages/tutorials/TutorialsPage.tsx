@@ -17,7 +17,7 @@ const PageHeader = styled.div`
   margin-bottom: 3rem;
 `;
 
-const PageTitle = styled.h1`
+const TutorialsPageTitle = styled.h1`
   font-size: 2.5rem;
   margin-bottom: 1rem;
   background: linear-gradient(90deg, #ADFF2F, #64DFDF);
@@ -130,7 +130,7 @@ const TutorialsPage: React.FC = () => {
           <LogoContainer>
             <Logo size="medium" />
           </LogoContainer>
-          <PageTitle>Tutorials & Guides</PageTitle>
+          <TutorialsPageTitle>Tutorials</TutorialsPageTitle>
           <PageDescription>
             Learn how to use Juici to generate innovative ideas, create professional PRDs, and streamline your product development process.
             Our tutorials range from beginner-friendly to advanced techniques.
