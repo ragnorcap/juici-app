@@ -310,15 +310,89 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { favorites } = useFavorites();
   const navigate = useNavigate();
+  
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [ideas, setIdeas] = useState<Idea[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [ideaHistory, setIdeaHistory] = useState<IdeaHistory[]>([]);
   const [preferences, setPreferences] = useState<UserPreferences>({
-    theme: 'light',
+    theme: 'dark',
     notification_enabled: true,
   });
+
+  const fetchData = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch projects
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (projectsError) throw projectsError;
+
+      // Fetch ideas
+      const { data: ideasData, error: ideasError } = await supabase
+        .from('ideas')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (ideasError) throw ideasError;
+
+      // Fetch idea history
+      const { data: historyData, error: historyError } = await supabase
+        .from('idea_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('generated_at', { ascending: false });
+
+      if (historyError) throw historyError;
+
+      // Fetch user preferences
+      const { data: prefsData, error: prefsError } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (prefsError && prefsError.code !== 'PGRST116') { // Not found error
+        throw prefsError;
+      }
+
+      setProjects(projectsData || []);
+      setIdeas(ideasData || []);
+      setIdeaHistory(historyData || []);
+
+      if (prefsData) {
+        setPreferences(prefsData);
+      } else {
+        // Create default preferences if none exist
+        const { error: insertError } = await supabase
+          .from('user_preferences')
+          .insert([
+            {
+              user_id: user.id,
+              theme: 'light',
+              notification_enabled: true,
+            },
+          ]);
+
+        if (insertError) throw insertError;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch dashboard data');
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Fetch user's projects and ideas
   useEffect(() => {
@@ -326,77 +400,6 @@ const DashboardPage: React.FC = () => {
       navigate('/login');
       return;
     }
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Fetch projects
-        const { data: projectsData, error: projectsError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (projectsError) throw projectsError;
-
-        // Fetch ideas
-        const { data: ideasData, error: ideasError } = await supabase
-          .from('ideas')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (ideasError) throw ideasError;
-
-        // Fetch idea history
-        const { data: historyData, error: historyError } = await supabase
-          .from('idea_history')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('generated_at', { ascending: false });
-
-        if (historyError) throw historyError;
-
-        // Fetch user preferences
-        const { data: prefsData, error: prefsError } = await supabase
-          .from('user_preferences')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (prefsError && prefsError.code !== 'PGRST116') { // Not found error
-          throw prefsError;
-        }
-
-        setProjects(projectsData || []);
-        setIdeas(ideasData || []);
-        setIdeaHistory(historyData || []);
-
-        if (prefsData) {
-          setPreferences(prefsData);
-        } else {
-          // Create default preferences if none exist
-          const { error: insertError } = await supabase
-            .from('user_preferences')
-            .insert([
-              {
-                user_id: user.id,
-                theme: 'light',
-                notification_enabled: true,
-              },
-            ]);
-
-          if (insertError) throw insertError;
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch dashboard data');
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
     fetchData();
   }, [user, navigate]);
@@ -416,7 +419,7 @@ const DashboardPage: React.FC = () => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          fetchProjects();
+          fetchData();
         }
       )
       .subscribe();
@@ -432,7 +435,7 @@ const DashboardPage: React.FC = () => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          fetchIdeas();
+          fetchData();
         }
       )
       .subscribe();
@@ -537,7 +540,7 @@ const DashboardPage: React.FC = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      await fetchProjects();
+      await fetchData();
     } catch (err) {
       console.error('Error updating step:', err);
     }

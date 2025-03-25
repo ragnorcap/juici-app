@@ -1,10 +1,18 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { config } from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import axios from 'axios';
+import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase, getFavorites, addFavorite, removeFavorite } from './lib/supabase';
+import { isDbConnected } from './lib/db';
+import { OpenAI } from 'openai';
 
-config();
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -60,6 +68,26 @@ app.get('/api/prompts', (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// Replace the Azure OpenAI client with regular OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+// Save to idea history
+try {
+  const { data } = await supabase.auth.getUser(req.headers.authorization?.split(' ')[1]);
+  if (data?.user) {
+    await supabase.from('idea_history').insert({
+      user_id: data.user.id,
+      idea_text: idea,
+      generated_prd: prdContent,
+    });
+  }
+} catch (error) {
+  console.error('Error saving to idea history:', error);
+  res.status(500).json({ error: 'Internal Server Error' });
+}
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

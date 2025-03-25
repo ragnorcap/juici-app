@@ -33,24 +33,38 @@ app.use((0, helmet_1.default)()); // Set security headers
 // Configure CORS
 const allowedOrigins = [
     'http://localhost:3000',
-    'https://juici-i5xkdt0f2-animas-projects-01c16ea7.vercel.app',
-    'https://juici-app.vercel.app'
+    'https://www.juici.space',
+    'https://juici.space',
+    'https://juici-i4lge2juy-animas-projects-01c16ea7.vercel.app'
 ];
-app.use((0, cors_1.default)({
+const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin)
-            return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+        if (!origin) {
+            callback(null, true);
+            return;
         }
-        return callback(null, true);
+        // Check if the origin matches any of our allowed domains
+        const isAllowed = allowedOrigins.some(allowed => {
+            // For www.juici.space, allow any path
+            if (allowed === 'https://www.juici.space') {
+                return origin.startsWith(allowed);
+            }
+            return origin === allowed;
+        });
+        if (isAllowed) {
+            callback(null, true);
+        }
+        else {
+            console.log('Blocked by CORS:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
     },
-    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Api-Key', 'X-Request-ID']
-}));
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key'],
+    credentials: true
+};
+app.use((0, cors_1.default)(corsOptions));
+app.use(express_1.default.json({ limit: '50kb' })); // Limit payload size to prevent DOS
 // Rate limiting
 const apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -83,9 +97,8 @@ const verifyApiKey = (req, res, next) => {
     }
     next();
 };
-// Add API key validation
+// Apply API key verification to all routes except health check
 app.use(verifyApiKey);
-app.use(express_1.default.json({ limit: '50kb' })); // Limit payload size to prevent DOS
 // Request logging with unique ID
 app.use((req, res, next) => {
     const requestId = (0, uuid_1.v4)();
@@ -161,8 +174,13 @@ const validatePRDRequest = (req, res, next) => {
     req.body.idea = idea.trim();
     next();
 };
+// Initialize OpenAI client
+const openai = new openai_1.OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+});
 // API Route to generate a PRD
 app.post('/api/generate-prd', validatePRDRequest, async (req, res) => {
+    var _a;
     try {
         const { idea } = req.body;
         // Use OpenAI API key from environment variables
@@ -178,13 +196,62 @@ app.post('/api/generate-prd', validatePRDRequest, async (req, res) => {
             const openai = new openai_1.OpenAI({
                 apiKey: apiKey
             });
-            // Use GPT-4o-mini model for PRD generation
+            // Use GPT-4 model for PRD generation
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: "gpt-4",
                 messages: [
                     {
                         role: "system",
-                        content: "You are a professional product manager who creates detailed Product Requirements Documents (PRDs). Create a comprehensive PRD for the following product idea."
+                        content: `You are a professional product manager who creates detailed Product Requirements Documents (PRDs).
+Your PRDs should be comprehensive and well-structured, following this format:
+
+1. Executive Summary
+- Brief overview of the product
+- Target audience
+- Key objectives
+
+2. Problem Statement
+- Clear description of the problem being solved
+- Market opportunity
+- Current pain points
+
+3. Product Overview
+- High-level description
+- Key features and functionalities
+- Unique value proposition
+
+4. User Stories & Requirements
+- Detailed user stories
+- Functional requirements
+- Non-functional requirements
+
+5. Technical Specifications
+- Architecture overview
+- Technology stack
+- Integration requirements
+- Security requirements
+
+6. User Interface
+- Design guidelines
+- User flow
+- Key screens/interactions
+
+7. Success Metrics
+- KPIs
+- Success criteria
+- Measurement methods
+
+8. Timeline & Milestones
+- Development phases
+- Key deliverables
+- Dependencies
+
+9. Risks & Mitigation
+- Potential risks
+- Mitigation strategies
+- Contingency plans
+
+Use Markdown formatting for better readability.`
                     },
                     {
                         role: "user",
@@ -195,6 +262,22 @@ app.post('/api/generate-prd', validatePRDRequest, async (req, res) => {
                 max_tokens: 4000
             });
             const prdContent = completion.choices[0].message.content;
+            // Save to idea history
+            try {
+                const { data } = await supabase_1.supabase.auth.getUser((_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(' ')[1]);
+                if (data === null || data === void 0 ? void 0 : data.user) {
+                    await supabase_1.supabase.from('idea_history').insert({
+                        user_id: data.user.id,
+                        idea_text: idea,
+                        generated_prd: prdContent,
+                        generated_at: new Date().toISOString()
+                    });
+                }
+            }
+            catch (dbError) {
+                console.error('Error saving to idea history:', dbError);
+                // Continue even if saving to history fails
+            }
             res.json({ prd: prdContent });
         }
         catch (openaiError) {
@@ -207,8 +290,7 @@ app.post('/api/generate-prd', validatePRDRequest, async (req, res) => {
         }
     }
     catch (error) {
-        console.error('Error generating PRD:', error);
-        // Generic error message to avoid information leakage
+        console.error('Error in /api/generate-prd:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

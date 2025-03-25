@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase, getFavorites, addFavorite, removeFavorite } from './lib/supabase';
 import { isDbConnected } from './lib/db';
 import { OpenAI } from 'openai';
-import { OpenAIClient, AzureKeyCredential } from '@azure/openai';
 
 // Load environment variables
 dotenv.config();
@@ -295,10 +294,10 @@ Use Markdown formatting for better readability.`
       
       // Save to idea history
       try {
-        const { user } = await supabase.auth.getUser(req.headers.authorization?.split(' ')[1]);
-        if (user) {
+        const { data } = await supabase.auth.getUser(req.headers.authorization?.split(' ')[1]);
+        if (data?.user) {
           await supabase.from('idea_history').insert({
-            user_id: user.id,
+            user_id: data.user.id,
             idea_text: idea,
             generated_prd: prdContent,
             generated_at: new Date().toISOString()

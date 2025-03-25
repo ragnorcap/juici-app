@@ -7,7 +7,7 @@ import Layout from '../../components/Layout';
 import CodeBlock from '../../components/CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import { FiX, FiSave, FiDownload } from 'react-icons/fi';
-import { Container } from '../styles/shared';
+import { Container } from '../../styles/shared';
 
 // Styled components
 const PageContainer = styled.div`
@@ -321,7 +321,7 @@ Claude: I'll create a PRDModal component using styled-components with the featur
 \`\`\`tsx
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
-import { Container } from '../styles/shared';
+import { Container } from '../../styles/shared';
 import ReactMarkdown from 'react-markdown';
 import { FiX, FiSave, FiDownload } from 'react-icons/fi';
 
