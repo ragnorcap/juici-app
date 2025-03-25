@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase, getFavorites, addFavorite, removeFavorite } from './lib/supabase';
 import { isDbConnected } from './lib/db';
 import { OpenAI } from 'openai';
+import { OpenAIClient, AzureKeyCredential } from '@azure/openai';
 
 // Load environment variables
 dotenv.config();
@@ -199,6 +200,14 @@ const validatePRDRequest = (req: Request, res: Response, next: NextFunction) => 
   next();
 };
 
+// Initialize Azure OpenAI client
+const azureClient = new OpenAIClient(
+  process.env.AZURE_ENDPOINT || '',
+  new AzureKeyCredential(process.env.AZURE_API_KEY || '')
+);
+
+// Initialize regular OpenAI client as fallback
+const openai = new OpenAI({
 // API Route to generate a PRD
 app.post('/api/generate-prd', validatePRDRequest, async (req: Request, res: Response) => {
   try {
@@ -219,13 +228,62 @@ app.post('/api/generate-prd', validatePRDRequest, async (req: Request, res: Resp
         apiKey: apiKey
       });
       
-      // Use GPT-4o-mini model for PRD generation
+      // Use GPT-4 model for PRD generation
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4",
         messages: [
           { 
             role: "system", 
-            content: "You are a professional product manager who creates detailed Product Requirements Documents (PRDs). Create a comprehensive PRD for the following product idea."
+            content: `You are a professional product manager who creates detailed Product Requirements Documents (PRDs).
+Your PRDs should be comprehensive and well-structured, following this format:
+
+1. Executive Summary
+- Brief overview of the product
+- Target audience
+- Key objectives
+
+2. Problem Statement
+- Clear description of the problem being solved
+- Market opportunity
+- Current pain points
+
+3. Product Overview
+- High-level description
+- Key features and functionalities
+- Unique value proposition
+
+4. User Stories & Requirements
+- Detailed user stories
+- Functional requirements
+- Non-functional requirements
+
+5. Technical Specifications
+- Architecture overview
+- Technology stack
+- Integration requirements
+- Security requirements
+
+6. User Interface
+- Design guidelines
+- User flow
+- Key screens/interactions
+
+7. Success Metrics
+- KPIs
+- Success criteria
+- Measurement methods
+
+8. Timeline & Milestones
+- Development phases
+- Key deliverables
+- Dependencies
+
+9. Risks & Mitigation
+- Potential risks
+- Mitigation strategies
+- Contingency plans
+
+Use Markdown formatting for better readability.`
           },
           { 
             role: "user", 
@@ -238,6 +296,22 @@ app.post('/api/generate-prd', validatePRDRequest, async (req: Request, res: Resp
       
       const prdContent = completion.choices[0].message.content;
       
+      // Save to idea history
+      try {
+        const { user } = await supabase.auth.getUser(req.headers.authorization?.split(' ')[1]);
+        if (user) {
+          await supabase.from('idea_history').insert({
+            user_id: user.id,
+            idea_text: idea,
+            generated_prd: prdContent,
+            generated_at: new Date().toISOString()
+          });
+        }
+      } catch (dbError) {
+        console.error('Error saving to idea history:', dbError);
+        // Continue even if saving to history fails
+      }
+      
       res.json({ prd: prdContent });
     } catch (openaiError) {
       console.error('OpenAI API error:', openaiError);
@@ -248,8 +322,7 @@ app.post('/api/generate-prd', validatePRDRequest, async (req: Request, res: Resp
       });
     }
   } catch (error) {
-    console.error('Error generating PRD:', error);
-    // Generic error message to avoid information leakage
+    console.error('Error in /api/generate-prd:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
