@@ -458,7 +458,7 @@ const PRDModal: React.FC<PRDModalProps> = ({
     try {
       const response = await chatWithJuici(userMessage, currentPRD);
       if (response.success && response.data) {
-        setChatMessages(prev => [...prev, { text: response.data, isUser: false }]);
+        setChatMessages(prev => [...prev, { text: response.data.toString(), isUser: false }]);
       } else {
         throw new Error(response.error || 'Failed to get response from Juici');
       }
