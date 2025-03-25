@@ -200,14 +200,11 @@ const validatePRDRequest = (req: Request, res: Response, next: NextFunction) => 
   next();
 };
 
-// Initialize Azure OpenAI client
-const azureClient = new OpenAIClient(
-  process.env.AZURE_ENDPOINT || '',
-  new AzureKeyCredential(process.env.AZURE_API_KEY || '')
-);
-
-// Initialize regular OpenAI client as fallback
+// Initialize OpenAI client
 const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
 // API Route to generate a PRD
 app.post('/api/generate-prd', validatePRDRequest, async (req: Request, res: Response) => {
   try {
