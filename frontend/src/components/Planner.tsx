@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { PageTitle } from '../styles/shared';
 import { FiPlus, FiCheck, FiLoader, FiTrash2, FiEdit2, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';

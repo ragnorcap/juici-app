@@ -5,6 +5,7 @@ import GlobalStyles from './styles/GlobalStyles';
 import { AuthProvider } from './contexts/AuthContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 import Planner from './components/Planner';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -15,6 +16,8 @@ import NotFoundPage from './pages/NotFoundPage';
 import TutorialsPage from './pages/TutorialsPage';
 import BlogPage from './pages/BlogPage';
 import AppPage from './pages/AppPage';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
 
 // Blog and Tutorial Content Pages
 import HowWeBuiltJuici from './pages/blog/HowWeBuiltJuici';
@@ -35,8 +38,18 @@ const App = () => {
           <GlobalStyles />
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/signin" element={<SignInPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/favorites" element={
+              <ProtectedRoute>
+                <FavoritesPage />
+              </ProtectedRoute>
+            } />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/tutorials" element={<TutorialsPage />} />
             <Route path="/blog" element={<BlogPage />} />

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { PageTitle } from '../styles/shared';
+import { PageTitle, Container, Button, Card } from '../styles/shared';
 import { FiList, FiActivity, FiBarChart2, FiCheckSquare, FiClipboard, FiPackage, FiStar, FiPlusCircle, FiClock, FiSettings, FiRefreshCw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import Card from '../components/Card';
 import { Link } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,7 +19,6 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { PageTitle, Container, Button } from '../styles/shared';
 
 // Register Chart.js components
 ChartJS.register(
@@ -478,7 +476,7 @@ const DashboardPage: React.FC = () => {
       prefsSubscription.unsubscribe();
     };
   }, [user]);
-
+  
   const fetchProjects = async () => {
     if (!user) return;
 
@@ -628,12 +626,12 @@ const DashboardPage: React.FC = () => {
       },
     ],
   };
-
+  
   return (
     <Layout>
       <Container>
         <PageTitle>Dashboard</PageTitle>
-        <DashboardContainer>
+    <DashboardContainer>
           <Header>
             <PageTitle>Dashboard</PageTitle>
           </Header>
@@ -641,18 +639,18 @@ const DashboardPage: React.FC = () => {
           {error && <ErrorMessage>{error}</ErrorMessage>}
 
           <StatsGrid>
-            <StatCard>
+        <StatCard>
               <StatValue>{getTotalProjects()}</StatValue>
               <StatLabel>Total Projects</StatLabel>
-            </StatCard>
-            <StatCard>
+        </StatCard>
+        <StatCard>
               <StatValue>{getTotalIdeas()}</StatValue>
               <StatLabel>Total Ideas</StatLabel>
-            </StatCard>
-            <StatCard>
+        </StatCard>
+        <StatCard>
               <StatValue>{getTotalFavorites()}</StatValue>
               <StatLabel>Favorite Ideas</StatLabel>
-            </StatCard>
+        </StatCard>
           </StatsGrid>
 
           <PreferencesSection>
@@ -697,7 +695,7 @@ const DashboardPage: React.FC = () => {
               </HistoryItem>
             ))}
           </HistoryList>
-        </DashboardContainer>
+    </DashboardContainer>
       </Container>
     </Layout>
   );

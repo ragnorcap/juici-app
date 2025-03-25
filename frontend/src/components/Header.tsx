@@ -1,186 +1,107 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import { PageTitle } from '../styles/shared';
-import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiArrowRight, FiZap } from 'react-icons/fi';
-import Button from './Button';
-import { getCurrentUser, signOut } from '../lib/supabase';
-import Logo from './Logo';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-// Styled components
 const HeaderContainer = styled.header`
+  background: ${props => props.theme.colors.background.secondary};
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const Nav = styled.nav`
+  max-width: ${props => props.theme.maxWidth};
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
 `;
 
-const NavLinks = styled.nav<{ $isOpen: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  
-  @media (max-width: 768px) {
-    position: absolute;
-    top: 80px;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    background-color: rgba(20, 20, 20, 0.9);
-    backdrop-filter: blur(10px);
-    padding: 2rem 1rem;
-    border-radius: 0 0 10px 10px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    transform: ${({ $isOpen }) => $isOpen ? 'translateY(0)' : 'translateY(-150%)'};
-    opacity: ${({ $isOpen }) => $isOpen ? '1' : '0'};
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
-`;
-
-const NavLink = styled(Link)<{ $isActive: boolean }>`
+const Logo = styled(Link)`
+  font-size: 1.5rem;
+  font-weight: ${props => props.theme.fonts.weights.bold};
+  color: ${props => props.theme.colors.purple.main};
   text-decoration: none;
-  color: ${({ $isActive }) => $isActive ? '#ADFF2F' : 'white'};
-  font-weight: ${({ $isActive }) => $isActive ? '600' : '400'};
-  font-size: 1rem;
-  padding: 0.5rem;
-  position: relative;
-  transition: all 0.2s ease;
-
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, #ADFF2F, #90EE90);
-    transform: ${({ $isActive }) => $isActive ? 'scaleX(1)' : 'scaleX(0)'};
-    transform-origin: bottom left;
-    transition: transform 0.3s ease;
-  }
-
+  
   &:hover {
-    color: #ADFF2F;
-    &:after {
-      transform: scaleX(1);
+    color: ${props => props.theme.colors.purple.light};
+  }
+`;
+
+const NavLinks = styled.div`
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+`;
+
+const NavLink = styled(Link)`
+  color: ${props => props.theme.colors.text.primary};
+  text-decoration: none;
+  font-weight: ${props => props.theme.fonts.weights.medium};
+  transition: ${props => props.theme.transition};
+  
+  &:hover {
+    color: ${props => props.theme.colors.purple.main};
+  }
+`;
+
+const AuthButton = styled(Link)`
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius};
+  font-weight: ${props => props.theme.fonts.weights.semiBold};
+  transition: ${props => props.theme.transition};
+  text-decoration: none;
+  
+  &.signin {
+    color: ${props => props.theme.colors.purple.main};
+    
+    &:hover {
+      color: ${props => props.theme.colors.purple.light};
+    }
+  }
+  
+  &.signup {
+    background: ${props => props.theme.colors.purple.main};
+    color: white;
+    
+    &:hover {
+      background: ${props => props.theme.colors.purple.dark};
     }
   }
 `;
 
-const MobileMenuButton = styled.button`
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: white;
-  cursor: pointer;
-
-  @media (max-width: 768px) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-`;
-
-const AuthButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-    flex-direction: column;
-  }
-`;
-
-// Header component
 const Header: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const location = useLocation();
-  
-  useEffect(() => {
-    const checkAuth = async () => {
-      const user = await getCurrentUser();
-      setIsLoggedIn(!!user);
-    };
-    
-    checkAuth();
-  }, []);
-  
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const { user, signOut } = useAuth();
   
   const handleSignOut = async () => {
     await signOut();
-    setIsLoggedIn(false);
   };
-  
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location]);
   
   return (
     <HeaderContainer>
-      <Logo />
-      
-      <MobileMenuButton onClick={toggleMenu}>
-        {isMenuOpen ? <FiX /> : <FiMenu />}
-      </MobileMenuButton>
-      
-      <NavLinks $isOpen={isMenuOpen}>
-        <NavLink to="/" $isActive={location.pathname === '/'}>
-          Home
-        </NavLink>
-        <NavLink to="/dashboard" $isActive={location.pathname === '/dashboard'}>
-          Dashboard
-        </NavLink>
-        <NavLink to="/favorites" $isActive={location.pathname === '/favorites'}>
-          Favorites
-        </NavLink>
-        <NavLink to="/tutorials" $isActive={location.pathname === '/tutorials'}>
-          Tutorials
-        </NavLink>
-        <NavLink to="/blog" $isActive={location.pathname === '/blog'}>
-          Blog
-        </NavLink>
-        
-        {isLoggedIn ? (
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Button
-              variant="primary"
-              to="/app"
-              as={Link}
-              $hasIcon={true}
-              $iconPosition="right"
-              icon={<FiZap />}
-            >
-              Launch App
-            </Button>
-            <Button onClick={handleSignOut} variant="outline">Logout</Button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Button onClick={() => {/* Navigate to Login */}} variant="outline">Login</Button>
-            <Button to="/signup" variant="primary">Sign Up</Button>
-          </div>
-        )}
-      </NavLinks>
+      <Nav>
+        <Logo to="/">Juici</Logo>
+        <NavLinks>
+          {user ? (
+            <>
+              <NavLink to="/dashboard">Dashboard</NavLink>
+              <NavLink to="/favorites">Favorites</NavLink>
+              <NavLink to="/planner">Planner</NavLink>
+              <AuthButton as="button" onClick={handleSignOut} className="signin">
+                Sign Out
+              </AuthButton>
+            </>
+          ) : (
+            <>
+              <NavLink to="/about">About</NavLink>
+              <NavLink to="/tutorials">Tutorials</NavLink>
+              <NavLink to="/blog">Blog</NavLink>
+              <AuthButton to="/signin" className="signin">Sign In</AuthButton>
+              <AuthButton to="/signup" className="signup">Sign Up</AuthButton>
+            </>
+          )}
+        </NavLinks>
+      </Nav>
     </HeaderContainer>
   );
 };

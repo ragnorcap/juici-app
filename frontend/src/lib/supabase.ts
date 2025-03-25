@@ -13,6 +13,15 @@ export interface User {
   updated_at: string;
 }
 
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  bio?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Favorite {
   id: string;
   user_id: string;
@@ -94,6 +103,56 @@ export const getCurrentUser = async () => {
 export const onAuthStateChange = (callback: (event: any, session: any) => void) => {
   const { data } = supabase.auth.onAuthStateChange(callback);
   return data;
+};
+
+// User profile functions
+export const getUserProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+    
+  return { profile: data as UserProfile | null, error };
+};
+
+export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single();
+    
+  return { profile: data as UserProfile | null, error };
+};
+
+export const uploadAvatar = async (userId: string, file: File) => {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}-${Math.random()}.${fileExt}`;
+  const filePath = `avatars/${fileName}`;
+  
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(filePath, file);
+    
+  if (uploadError) {
+    return { url: null, error: uploadError };
+  }
+  
+  const { data } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(filePath);
+    
+  const { error: updateError } = await supabase
+    .from('user_profiles')
+    .update({ avatar_url: data.publicUrl })
+    .eq('id', userId);
+    
+  return {
+    url: data.publicUrl,
+    error: updateError
+  };
 };
 
 // Favorites related functions
