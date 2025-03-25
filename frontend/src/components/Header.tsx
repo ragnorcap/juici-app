@@ -70,6 +70,23 @@ const AuthButton = styled(Link)`
   }
 `;
 
+// Create a button version of AuthButton
+const SignOutButton = styled.button`
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius};
+  font-weight: ${props => props.theme.fonts.weights.semiBold};
+  transition: ${props => props.theme.transition};
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${props => props.theme.purple.main};
+  
+  &:hover {
+    color: ${props => props.theme.purple.light};
+  }
+`;
+
 const Header: React.FC = () => {
   const { user, signOut } = useAuth();
   
@@ -87,9 +104,9 @@ const Header: React.FC = () => {
               <NavLink to="/dashboard">Dashboard</NavLink>
               <NavLink to="/favorites">Favorites</NavLink>
               <NavLink to="/planner">Planner</NavLink>
-              <AuthButton as="button" onClick={handleSignOut} className="signin">
+              <SignOutButton onClick={handleSignOut} className="signin">
                 Sign Out
-              </AuthButton>
+              </SignOutButton>
             </>
           ) : (
             <>
