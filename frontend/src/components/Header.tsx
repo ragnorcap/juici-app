@@ -37,7 +37,7 @@ const NavLinks = styled.div`
 const NavLink = styled(Link)`
   color: ${props => props.theme.text};
   text-decoration: none;
-  font-weight: ${props => props.theme.fonts.weights.medium};
+  font-weight: ${props => props.theme.fonts.weights.regular};
   transition: ${props => props.theme.transition};
   
   &:hover {
